@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"github.com/Niroloc/Temcshiki/v2/src/context"
+	"github.com/Niroloc/Temcshiki/v2/src/db"
 )
 
 func main() {
-	user := context.NewUser(1, "John")
-	fmt.Println(*user)
+	database := db.GetDb("data/db.db")
+
 }
