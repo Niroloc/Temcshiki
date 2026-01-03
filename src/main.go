@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Niroloc/Temcshiki/v2/context"
+	"github.com/Niroloc/Temcshiki/v2/src/context"
 )
 
 func main() {

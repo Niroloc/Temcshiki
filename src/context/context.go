@@ -1,13 +1,28 @@
 package context
 
+type UserRights string
+
+const ADMIN UserRights = "admin"
+const RESERVATOR UserRights = "reservator"
+const VISITOR UserRights = "visitor"
+const SPECTATOR UserRights = "spectator"
+
+type Stage int
+
+const CHOOSING Stage = 0
+const VOTING Stage = 1
+const REMINDING Stage = 2
+const APPROVING Stage = 3
+const RESERVATING Stage = 4
+const REVIEWING Stage = 5
+
 type User struct {
-	userId int
-	userName string
+	id int
+	username string
+	rights UserRights
 }
 
-func NewUser(userId int, userName string) *User {
-	return &User{
-		userId: userId,
-		userName: userName,
-	}
+type Context struct {
+	user User
+	stage Stage
 }

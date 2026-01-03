@@ -1,9 +1,7 @@
-FROM golang:1.18
+FROM golang:1.25
 
-ADD src /app
+COPY . /app
 
 WORKDIR /app
 
-RUN go build -v -o main.go
-
-CMD ["main"]
+CMD ["go", "run", "src/main.go"]
