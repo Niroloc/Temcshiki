@@ -19,11 +19,8 @@ func NewUser(id int, username string, rights UserRights) User {
 	return User{id, username, rights}
 }
 
-type Info struct{}
-
 type Context struct {
 	tgidToUser map[int]User
-	userToInfo map[User]Info
 	stage      db.Stage
 	fresh      bool
 	db         *db.Db

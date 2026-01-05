@@ -3,12 +3,15 @@ package db
 import (
 	"database/sql"
 	"os"
+	"reflect"
 
+	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type Db struct {
 	connection *sql.DB
+	logger     *logger.Logger
 }
 
 func GetDb(file string) *Db {
@@ -16,7 +19,7 @@ func GetDb(file string) *Db {
 	if err != nil {
 		panic(err)
 	}
-	return &Db{db}
+	return &Db{db, logger.GetLogger(reflect.TypeFor[Db]())}
 }
 
 func (this *Db) InitDb() {
