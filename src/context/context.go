@@ -20,12 +20,17 @@ func NewUser(id int, username string, rights UserRights) User {
 }
 
 type Context struct {
-	tgidToUser map[int]User
+	tgIdToUser map[int]User
 	stage      db.Stage
 	fresh      bool
 	db         *db.Db
 }
 
-func NewContext(db *db.Db) *Context {
-	return &Context{}
+func CreateContext(db *db.Db) *Context {
+	tgIdToUser := map[int]User{}
+	stage := db.GetStage()
+	for _, user := range db.GetUsers() {
+		tgIdToUser[user.TgId] = User{user.Id, user.Username, UserRights(user.Rights)}
+	}
+	return &Context{tgIdToUser: tgIdToUser, stage: stage, fresh: true, db: db}
 }
