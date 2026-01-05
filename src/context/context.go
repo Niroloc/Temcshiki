@@ -1,20 +1,13 @@
 package context
 
+import "github.com/Niroloc/Temcshiki/v2/src/db"
+
 type UserRights string
 
 const ADMIN UserRights = "admin"
 const RESERVATOR UserRights = "reservator"
 const VISITOR UserRights = "visitor"
 const SPECTATOR UserRights = "spectator"
-
-type Stage int
-
-const CHOOSING Stage = 0
-const VOTING Stage = 1
-const REMINDING Stage = 2
-const APPROVING Stage = 3
-const RESERVATING Stage = 4
-const REVIEWING Stage = 5
 
 type User struct {
 	id       int
@@ -26,11 +19,15 @@ func NewUser(id int, username string, rights UserRights) User {
 	return User{id, username, rights}
 }
 
+type Info struct{}
+
 type Context struct {
-	user  User
-	stage Stage
+	tgidToUser map[int]User
+	userToInfo map[User]Info
+	stage      db.Stage
+	db         *db.Db
 }
 
-func NewContext(user User, stage Stage) *Context {
-	return &Context{user, stage}
+func NewContext(db *db.Db) *Context {
+	return &Context{}
 }

@@ -4,3 +4,5 @@ services:
       context: ./
     volumes:
       - ./data/:/data/
+    env_file:
+      - .env

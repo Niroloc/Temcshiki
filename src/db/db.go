@@ -2,9 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
-
-	"github.com/Niroloc/Temcshiki/v2/src/context"
+	"os"
 )
 
 type Db struct {
@@ -19,19 +17,20 @@ func GetDb(file string) *Db {
 	return &Db{db}
 }
 
-func (this *Db) GetContext(userId int) *context.Context {
-	res, err := this.connection.Exec(
-		fmt.Sprint("SELECT * FROM users where userId = %d",
-			userId))
+func (this *Db) InitDb() {
+	sql_file := os.Getenv("FORWARD_MIGRATION")
+	query, err := os.ReadFile(sql_file)
 	if err != nil {
 		panic(err)
 	}
-	line, err := res.LastInsertId()
+	if _, err := this.connection.Exec(string(query)); err != nil {
+		panic(err)
+	}
+	res, err := this.connection.Query("SELECT current_stage FROM stage")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("line: %v\n", line)
-	user := context.NewUser(0, "Konfeen Ott", context.ADMIN)
-	stage := context.CHOOSING
-	return context.NewContext(user, stage)
+	if !res.Next() {
+		this.connection.Exec("INSERT INTO stage (current_stage) VALUES (0)")
+	}
 }
