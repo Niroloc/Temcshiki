@@ -25,6 +25,7 @@ type Context struct {
 	tgidToUser map[int]User
 	userToInfo map[User]Info
 	stage      db.Stage
+	fresh      bool
 	db         *db.Db
 }
 
