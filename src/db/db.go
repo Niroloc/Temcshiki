@@ -2,8 +2,10 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	_ "github.com/mattn/go-sqlite3"
@@ -30,20 +32,45 @@ func GetDb(file string) *Db {
 }
 
 func (this *Db) InitDb() {
-	sql_file := os.Getenv("FORWARD_MIGRATION")
-	query, err := os.ReadFile(sql_file)
+	this.logger.Debug(fmt.Sprintf("Forward sql script file: %s", os.Getenv("FORWARD_MIGRATION")))
+	query, err := os.ReadFile(os.Getenv("FORWARD_MIGRATION"))
 	if err != nil {
+		this.logger.Error("No initial sql script")
 		panic(err)
 	}
 	if _, err := this.connection.Exec(string(query)); err != nil {
+		this.logger.Error("Error occured while execute initial script")
 		panic(err)
 	}
 	res, err := this.connection.Query("SELECT current_stage FROM stage")
 	if err != nil {
+		this.logger.Error("Stage check failed")
 		panic(err)
 	}
 	if !res.Next() {
+		this.logger.Warn("No stage in db, inserting stage CHOOSING")
 		this.connection.Exec("INSERT INTO stage (current_stage) VALUES (0)")
+	}
+	res, err = this.connection.Query("SELECT * FROM users WHERE rights = \"admin\"")
+	if err != nil {
+		this.logger.Error("Error while checking admin user")
+		panic(err)
+	}
+	if res.Next() {
+		return
+	}
+	this.logger.Warn("No admin user, default admin set")
+	defaultAdminId, err := strconv.Atoi(os.Getenv("DEFAULT_ADMIN_ID"))
+	if err != nil {
+		this.logger.Error("No valid default admin id in envs")
+		panic(err)
+	}
+	defaultAdminName := os.Getenv("DEFAULT_ADMIN_NAME")
+	if _, err := this.connection.Exec(
+		fmt.Sprintf("INSERT INTO users (tgid, username, rights) VALUES (%d, \"%s\", \"%s\")",
+			defaultAdminId, defaultAdminName, ADMIN)); err != nil {
+		this.logger.Error("Error while inserting default admin")
+		panic(err)
 	}
 }
 

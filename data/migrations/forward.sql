@@ -10,6 +10,7 @@ create table if not exists restoraunts (
     rest_name text NOT NULL,
     map_url text NOT NULL,
     reference_by INTEGER NOT NULL,
+    votes INTEGER DEFAULT 0,
     FOREIGN KEY (reference_by) REFERENCES users(id)
  );
 
@@ -25,13 +26,13 @@ create table if not exists reviews (
 
 create table if not exists events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    dt DATE NOT NULL,
+    visite_date DATE NOT NULL,
     rest_id INTEGER NOT NULL,
     FOREIGN KEY (rest_id) REFERENCES restoraunts(id)
 );
 
 create table if not exists possible_dates (
-    dt DATE PRIMARY KEY
+    possible_date DATE PRIMARY KEY
 );
 
 create table if not exists stage (
