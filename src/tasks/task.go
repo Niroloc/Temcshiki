@@ -1,4 +1,4 @@
-package mailings
+package tasks
 
 import "github.com/Niroloc/Temcshiki/v2/src/db"
 

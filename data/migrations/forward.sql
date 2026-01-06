@@ -32,9 +32,19 @@ create table if not exists events (
 );
 
 create table if not exists possible_dates (
-    possible_date DATE PRIMARY KEY
+    possible_date DATE PRIMARY KEY,
+    votes INTEGER DEFAULT 0
 );
 
 create table if not exists stage (
     current_stage INTEGER NOT NULL
 );
+
+create table if not exists actions {
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    action_type TEXT NOT NULL,
+    subject_type TEXT DEFAULT NULL,
+    subject_id INTEGER DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+}

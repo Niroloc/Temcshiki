@@ -1,7 +1,9 @@
 package mailings
 
-func ApplyTasks(tasks []Task) {
-	for _, task := range tasks {
+import "github.com/Niroloc/Temcshiki/v2/src/context"
+
+func ApplyTasks(context context.Context) {
+	for _, task := range context.tasks {
 
 	}
 }
