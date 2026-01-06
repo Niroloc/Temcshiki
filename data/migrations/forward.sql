@@ -40,11 +40,12 @@ create table if not exists stage (
     current_stage INTEGER NOT NULL
 );
 
-create table if not exists actions {
+create table if not exists actions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dt DATETIME NOT NULL,
     user_id INTEGER NOT NULL,
     action_type TEXT NOT NULL,
     subject_type TEXT DEFAULT NULL,
     subject_id INTEGER DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
-}
+);
