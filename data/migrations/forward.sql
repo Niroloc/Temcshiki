@@ -31,9 +31,9 @@ create table if not exists events (
     FOREIGN KEY (rest_id) REFERENCES restoraunts(id)
 );
 
-create table if not exists next_task {
+create table if not exists next_task (
     dt DATETIME PRIMARY KEY
-}
+);
 
 create table if not exists possible_dates (
     possible_date DATE PRIMARY KEY,

@@ -27,4 +27,5 @@ func main() {
 	data := data.CreateContext(bot, dbWrapper, initTasks())
 	logger.Info("Data created")
 	data.NextStage()
+	logger.Info(bot.InfinitePolling().Error())
 }

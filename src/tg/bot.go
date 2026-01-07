@@ -2,10 +2,12 @@ package tg
 
 import (
 	"context"
+	"errors"
 	"reflect"
 
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	"github.com/mymmrac/telego"
+	tu "github.com/mymmrac/telego/telegoutil"
 )
 
 type Bot struct {
@@ -32,8 +34,21 @@ func (this *Bot) InfinitePolling() error {
 		this.logger.Error("Cannot start polling")
 		panic(err)
 	}
+	ctx := context.Background()
+	for update := range updates {
+		if update.Message == nil {
+			continue
+		}
+		msg := update.Message
+		chatId := tu.ID(msg.Chat.ID)
+		this.bot.SendMessage(ctx, tu.Message(chatId, "Привет, я бот!"))
+	}
+	return errors.New("Polling closed")
 }
 
 func (this *Bot) SendMessage(tgId int, msg string) error {
-	return nil
+	ctx := context.Background()
+	chatId := tu.ID(int64(tgId))
+	_, err := this.bot.SendMessage(ctx, tu.Message(chatId, msg))
+	return err
 }
