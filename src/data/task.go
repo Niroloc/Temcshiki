@@ -1,8 +1,10 @@
 package data
 
-import "github.com/Niroloc/Temcshiki/v2/src/db"
+import (
+	"github.com/Niroloc/Temcshiki/v2/src/db"
+)
 
 type Task interface {
 	Stages() map[db.Stage]struct{}
-	Apply(context *Data)
+	Apply(bot *Data)
 }

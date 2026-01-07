@@ -8,7 +8,6 @@ import (
 	"github.com/Niroloc/Temcshiki/v2/src/db"
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	"github.com/Niroloc/Temcshiki/v2/src/tasks"
-	"github.com/Niroloc/Temcshiki/v2/src/tg"
 )
 
 type root struct{}
@@ -22,10 +21,9 @@ func main() {
 	dbWrapper := db.GetDb(os.Getenv("DB_FILE"))
 	dbWrapper.InitDb(os.Getenv("FORWARD_MIGRATION"))
 	logger.Info("Db initialized")
-	bot := tg.InitBot(os.Getenv("TOKEN"))
+	bot := data.CreateBot(os.Getenv("TOKEN"))
 	logger.Info("Bot initialized")
-	data := data.CreateContext(bot, dbWrapper, initTasks())
+	data := data.CreateData(dbWrapper, bot, initTasks())
 	logger.Info("Data created")
-	data.NextStage()
-	logger.Info(bot.InfinitePolling().Error())
+	logger.Info(data.InfinitePolling().Error())
 }

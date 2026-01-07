@@ -1,8 +1,7 @@
-package tg
+package data
 
 import (
 	"context"
-	"errors"
 	"reflect"
 
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
@@ -15,7 +14,7 @@ type Bot struct {
 	logger *logger.Logger
 }
 
-func InitBot(botToken string) *Bot {
+func CreateBot(botToken string) *Bot {
 	logger := logger.GetLogger(reflect.TypeFor[Bot]())
 	bot, err := telego.NewBot(botToken)
 	if err != nil {
@@ -26,24 +25,6 @@ func InitBot(botToken string) *Bot {
 		bot:    bot,
 		logger: logger,
 	}
-}
-
-func (this *Bot) InfinitePolling() error {
-	updates, err := this.bot.UpdatesViaLongPolling(context.Background(), nil)
-	if err != nil {
-		this.logger.Error("Cannot start polling")
-		panic(err)
-	}
-	ctx := context.Background()
-	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
-		msg := update.Message
-		chatId := tu.ID(msg.Chat.ID)
-		this.bot.SendMessage(ctx, tu.Message(chatId, "Привет, я бот!"))
-	}
-	return errors.New("Polling closed")
 }
 
 func (this *Bot) SendMessage(tgId int, msg string) error {

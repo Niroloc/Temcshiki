@@ -1,24 +1,25 @@
 package data
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/Niroloc/Temcshiki/v2/src/db"
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
-	"github.com/Niroloc/Temcshiki/v2/src/tg"
 )
 
 type Data struct {
 	tgIdToUser map[int]User
 	stage      db.Stage
 	tasks      []Task
-	bot        *tg.Bot
+	bot        *Bot
 	db         *db.Db
 	logger     *logger.Logger
 }
 
-func CreateContext(bot *tg.Bot, dbWrapper *db.Db, tasks []Task) *Data {
+func CreateData(dbWrapper *db.Db, bot *Bot, tasks []Task) *Data {
 	tgIdToUser := map[int]User{}
 	stage := dbWrapper.GetStage()
 	for _, user := range dbWrapper.GetUsers() {
@@ -28,7 +29,6 @@ func CreateContext(bot *tg.Bot, dbWrapper *db.Db, tasks []Task) *Data {
 		tgIdToUser: tgIdToUser,
 		stage:      stage,
 		tasks:      tasks,
-		bot:        bot,
 		db:         dbWrapper,
 		logger:     logger.GetLogger(reflect.TypeFor[Data]())}
 }
@@ -53,10 +53,29 @@ func (this *Data) GetUsers() map[int]User {
 	return this.tgIdToUser
 }
 
-func (this *Data) GetBot() *tg.Bot {
+func (this *Data) GetBot() *Bot {
 	return this.bot
 }
 
 func (this *Data) NextStage() {
 	this.stage.Next()
+}
+
+func (this *Data) InfinitePolling() error {
+	bot := this.bot.bot
+	updates, err := bot.UpdatesViaLongPolling(context.Background(), nil)
+	if err != nil {
+		this.logger.Error("Cannot start polling")
+		panic(err)
+	}
+	this.logger.Info("Starting polling")
+	for update := range updates {
+		if update.Message != nil {
+			tgId := int(update.Message.Chat.ID)
+			this.bot.SendMessage(tgId, fmt.Sprint(this.tgIdToUser[tgId].Username))
+		} else if update.CallbackQuery != nil {
+			continue
+		}
+	}
+	return errors.New("Polling closed")
 }

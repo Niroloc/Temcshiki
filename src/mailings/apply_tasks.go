@@ -1,12 +1,12 @@
 package mailings
 
-import "github.com/Niroloc/Temcshiki/v2/src/context"
+import "github.com/Niroloc/Temcshiki/v2/src/data"
 
-func ApplyTasks(context *context.Context) {
-	for _, task := range context.GetTasks() {
-		if _, exists := task.Stages()[context.GetStage()]; !exists {
+func ApplyTasks(data *data.Data) {
+	for _, task := range data.GetTasks() {
+		if _, exists := task.Stages()[data.GetStage()]; !exists {
 			continue
 		}
-		task.Apply(context)
+		task.Apply(data)
 	}
 }
