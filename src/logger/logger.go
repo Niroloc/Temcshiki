@@ -24,11 +24,11 @@ type Logger struct {
 func getLogLevel() LogLevel {
 	str := os.Getenv("LOGLEVEL")
 	if str == "" {
-		return WARN
+		return INFO
 	}
 	intLevel, err := strconv.Atoi(str)
 	if err != nil {
-		return WARN
+		return INFO
 	}
 	if intLevel < 0 || intLevel > 3 {
 		return DEBUG

@@ -31,9 +31,9 @@ func GetDb(file string) *Db {
 	return &Db{db, logger.GetLogger(reflect.TypeFor[Db]())}
 }
 
-func (this *Db) InitDb() {
+func (this *Db) InitDb(migration_file string) {
 	this.logger.Debug(fmt.Sprintf("Forward sql script file: %s", os.Getenv("FORWARD_MIGRATION")))
-	query, err := os.ReadFile(os.Getenv("FORWARD_MIGRATION"))
+	query, err := os.ReadFile(migration_file)
 	if err != nil {
 		this.logger.Error("No initial sql script")
 		panic(err)
