@@ -9,6 +9,7 @@ const APPROVING Stage = 3
 const RESERVATING Stage = 4
 const REVIEWING Stage = 5
 
-func (this *Stage) Next() {
+func (this *Stage) Next() Stage {
 	(*this) = ((*this) + 1) % 6
+	return (*this)
 }

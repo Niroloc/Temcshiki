@@ -32,7 +32,8 @@ create table if not exists events (
 );
 
 create table if not exists next_task (
-    dt DATETIME PRIMARY KEY
+    id INTEGER UNIQUE
+    dt DATE PRIMARY KEY
 );
 
 create table if not exists possible_dates (

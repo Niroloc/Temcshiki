@@ -106,3 +106,28 @@ func (this *Db) GetStage() Stage {
 	row.Scan(&stage)
 	return Stage(stage)
 }
+
+func (this *Db) UpdateStage(prevStage, curStage Stage) {
+	_, err := this.connection.Exec(
+		fmt.Sprintf("UPDATE stage SET dt = \"%d\" WHERE dt = \"%d\"",
+			curStage,
+			prevStage,
+		),
+	)
+	if err != nil {
+		this.logger.Warn("Error while updating stage in db, rollback to default")
+		this.GetStage()
+	}
+}
+
+func (this *Db) GetNextTaskDate() string {
+	res, err := this.connection.Query(
+		"SELECT dt FROM next_task WHERE id = 0",
+	)
+	if err != nil || !res.Next() {
+		this.logger.Error("Cannot get next task date from db")
+	}
+	result := ""
+	res.Scan(&result)
+	return result
+}

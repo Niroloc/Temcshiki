@@ -44,7 +44,13 @@ func (this *Data) GetUsers() map[int]User {
 }
 
 func (this *Data) NextStage() {
-	this.stage.Next()
+	prevStage := this.stage
+	curStage := this.stage.Next()
+	this.db.UpdateStage(prevStage, curStage)
+}
+
+func (this *Data) GetDb() *Db {
+	return this.db
 }
 
 func (this *Data) GetUsersMap() map[int]User {

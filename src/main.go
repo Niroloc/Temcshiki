@@ -13,10 +13,6 @@ import (
 
 type root struct{}
 
-func initTasks() []tasks.Task {
-	return []tasks.Task{tasks.NewChooseReminder()}
-}
-
 func main() {
 	logger := logger.GetLogger(reflect.TypeFor[root]())
 	dbWrapper := data.GetDb(os.Getenv("DB_FILE"))
@@ -26,10 +22,12 @@ func main() {
 	logger.Info("Bot initialized")
 	data := data.CreateData(dbWrapper)
 	logger.Info("Data created")
-	// tasks := initTasks()
+	tasks := tasks.InitTasks(data, bot)
 	logger.Info("Tasks initialized")
+	go tasks.Loop()
+	logger.Info("Tasks loop started")
 	err := bot.InfinitePolling(data)
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Println(err.Error())
 	}
 }
