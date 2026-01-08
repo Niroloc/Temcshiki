@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	_ "github.com/mattn/go-sqlite3"
@@ -31,8 +32,15 @@ func GetDb(file string) *Db {
 	return &Db{db, logger.GetLogger(reflect.TypeFor[Db]())}
 }
 
+func getNextSunday(today time.Time) time.Time {
+	res := today.AddDate(0, 0, 1)
+	for res.Weekday() != time.Sunday {
+		res = res.AddDate(0, 0, 1)
+	}
+	return res
+}
+
 func (this *Db) InitDb(migration_file string) {
-	this.logger.Debug(fmt.Sprintf("Forward sql script file: %s", os.Getenv("FORWARD_MIGRATION")))
 	query, err := os.ReadFile(migration_file)
 	if err != nil {
 		this.logger.Error("No initial sql script")
@@ -51,26 +59,38 @@ func (this *Db) InitDb(migration_file string) {
 		this.logger.Warn("No stage in db, inserting stage CHOOSING")
 		this.connection.Exec("INSERT INTO stage (current_stage) VALUES (0)")
 	}
-	res, err = this.connection.Query("SELECT * FROM users WHERE rights = \"admin\"")
+	res, err = this.connection.Query("SELECT * FROM users WHERE rights = 'admin'")
 	if err != nil {
 		this.logger.Error("Error while checking admin user")
 		panic(err)
 	}
-	if res.Next() {
-		return
+	if !res.Next() {
+		this.logger.Warn("No admin user, default admin set")
+		defaultAdminId, err := strconv.Atoi(os.Getenv("DEFAULT_ADMIN_ID"))
+		if err != nil {
+			this.logger.Error("No valid default admin id in envs")
+			panic(err)
+		}
+		defaultAdminName := os.Getenv("DEFAULT_ADMIN_NAME")
+		if _, err := this.connection.Exec(
+			fmt.Sprintf("INSERT INTO users (tgid, username, rights) VALUES (%d, \"%s\", \"%s\")",
+				defaultAdminId, defaultAdminName, ADMIN)); err != nil {
+			this.logger.Error("Error while inserting default admin")
+			panic(err)
+		}
 	}
-	this.logger.Warn("No admin user, default admin set")
-	defaultAdminId, err := strconv.Atoi(os.Getenv("DEFAULT_ADMIN_ID"))
-	if err != nil {
-		this.logger.Error("No valid default admin id in envs")
-		panic(err)
-	}
-	defaultAdminName := os.Getenv("DEFAULT_ADMIN_NAME")
-	if _, err := this.connection.Exec(
-		fmt.Sprintf("INSERT INTO users (tgid, username, rights) VALUES (%d, \"%s\", \"%s\")",
-			defaultAdminId, defaultAdminName, ADMIN)); err != nil {
-		this.logger.Error("Error while inserting default admin")
-		panic(err)
+	res, err = this.connection.Query("SELECT dt FROM next_task WHERE id = 0")
+	if err != nil || !res.Next() {
+		this.logger.Warn("No next task date scheduled, inserting next Sunday")
+		nextTaskDay := getNextSunday(time.Now())
+		this.logger.Info(nextTaskDay.Format(time.DateOnly))
+		if _, err := this.connection.Exec(
+			"INSERT INTO next_task (id, dt) VALUES (0, '?')",
+			nextTaskDay.Format(time.DateOnly),
+		); err != nil {
+			this.logger.Error("Error while setting new task date")
+			panic(err)
+		}
 	}
 }
 
@@ -117,6 +137,32 @@ func (this *Db) UpdateStage(prevStage, curStage Stage) {
 	if err != nil {
 		this.logger.Warn("Error while updating stage in db, rollback to default")
 		this.GetStage()
+	}
+
+	prevDate, err := time.Parse(time.DateOnly, this.GetNextTaskDate())
+	if err != nil {
+		panic(err)
+	}
+	nextDate := getNextSunday(prevDate)
+	if curStage == REVIEWING {
+		res, err := this.connection.Query("SELECT visit_date FROM events WHERE visited = 0")
+		if err != nil || !res.Next() {
+			this.logger.Error("Cannot extract next event day from events, use next Sunday")
+		} else {
+			nextDateStr := ""
+			res.Scan(&nextDateStr)
+			nextDate, err = time.Parse(time.DateOnly, nextDateStr)
+			if err != nil {
+				this.logger.Error("Cannot parse next event day from events, use next Sunday")
+				nextDate = getNextSunday(prevDate)
+			}
+		}
+		this.connection.Exec("UPDATE next_task SET dt = '?' WHERE id = 0", nextDate.Format(time.DateOnly))
+	} else {
+		this.connection.Exec(
+			"UPDATE next_task SET dt = '?' WHERE id = 0",
+			nextDate.Format(time.DateOnly),
+		)
 	}
 }
 

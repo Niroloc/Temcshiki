@@ -26,13 +26,14 @@ create table if not exists reviews (
 
 create table if not exists events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    visite_date DATE NOT NULL,
+    visit_date DATE NOT NULL,
     rest_id INTEGER NOT NULL,
+    visited INTEGER DEFAULT 0,
     FOREIGN KEY (rest_id) REFERENCES restoraunts(id)
 );
 
 create table if not exists next_task (
-    id INTEGER UNIQUE
+    id INTEGER UNIQUE,
     dt DATE PRIMARY KEY
 );
 

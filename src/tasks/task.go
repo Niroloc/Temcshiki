@@ -19,7 +19,7 @@ type Tasks struct {
 	exportedData *data.Data
 	bot          *tg.Bot
 	tasks        []Task
-	scheduled    []*time.Timer
+	scheduled    *time.Time
 	stageToTime  map[data.Stage]string
 	logger       *logger.Logger
 }
@@ -31,7 +31,7 @@ func InitTasks(exportedData *data.Data, bot *tg.Bot) *Tasks {
 		tasks: []Task{
 			NewChooseReminder(),
 		},
-		scheduled: []*time.Timer{},
+		scheduled: nil,
 		stageToTime: map[data.Stage]string{
 			data.CHOOSING:    "12:00:00",
 			data.VOTING:      "19:00:00",
@@ -56,9 +56,6 @@ func (this *Tasks) applyTasks() {
 
 func (this *Tasks) Loop() {
 	for true {
-		if len(this.scheduled) > 0 {
-			time.Sleep(time.Minute * 5)
-		}
 		ts, exists := this.stageToTime[this.exportedData.GetStage()]
 		if !exists {
 			ts = "19:00:00"
@@ -71,6 +68,14 @@ func (this *Tasks) Loop() {
 			time.Sleep(time.Second * 10)
 		}
 		delay := taskTime.Sub(time.Now())
-		this.scheduled = append(this.scheduled, time.AfterFunc(delay, this.applyTasks))
+		if this.scheduled != nil {
+			if this.scheduled.Compare(time.Now()) <= 0 {
+				this.scheduled = nil
+			} else {
+				time.Sleep(delay)
+			}
+		}
+		time.AfterFunc(delay, this.applyTasks)
+		this.scheduled = &taskTime
 	}
 }
