@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
@@ -73,7 +74,7 @@ func (this *Db) InitDb(migration_file string) {
 		}
 		defaultAdminName := os.Getenv("DEFAULT_ADMIN_NAME")
 		if _, err := this.connection.Exec(
-			fmt.Sprintf("INSERT INTO users (tgid, username, rights) VALUES (%d, \"%s\", \"%s\")",
+			fmt.Sprintf("INSERT INTO users (tgid, username, rights) VALUES (%d, '%s', '%s')",
 				defaultAdminId, defaultAdminName, ADMIN)); err != nil {
 			this.logger.Error("Error while inserting default admin")
 			panic(err)
@@ -85,8 +86,10 @@ func (this *Db) InitDb(migration_file string) {
 		nextTaskDay := getNextSunday(time.Now())
 		this.logger.Info(nextTaskDay.Format(time.DateOnly))
 		if _, err := this.connection.Exec(
-			"INSERT INTO next_task (id, dt) VALUES (0, '?')",
-			nextTaskDay.Format(time.DateOnly),
+			fmt.Sprintf(
+				"INSERT INTO next_task (id, dt) VALUES (0, '%s')",
+				nextTaskDay.Format(time.DateOnly),
+			),
 		); err != nil {
 			this.logger.Error("Error while setting new task date")
 			panic(err)
@@ -129,7 +132,7 @@ func (this *Db) GetStage() Stage {
 
 func (this *Db) UpdateStage(prevStage, curStage Stage) {
 	_, err := this.connection.Exec(
-		fmt.Sprintf("UPDATE stage SET dt = \"%d\" WHERE dt = \"%d\"",
+		fmt.Sprintf("UPDATE stage SET dt = %d WHERE dt = %d",
 			curStage,
 			prevStage,
 		),
@@ -157,11 +160,18 @@ func (this *Db) UpdateStage(prevStage, curStage Stage) {
 				nextDate = getNextSunday(prevDate)
 			}
 		}
-		this.connection.Exec("UPDATE next_task SET dt = '?' WHERE id = 0", nextDate.Format(time.DateOnly))
+		this.connection.Exec(
+			fmt.Sprintf(
+				"UPDATE next_task SET dt = '%s' WHERE id = 0",
+				nextDate.Format(time.DateOnly),
+			),
+		)
 	} else {
 		this.connection.Exec(
-			"UPDATE next_task SET dt = '?' WHERE id = 0",
-			nextDate.Format(time.DateOnly),
+			fmt.Sprintf(
+				"UPDATE next_task SET dt = '%s' WHERE id = 0",
+				nextDate.Format(time.DateOnly),
+			),
 		)
 	}
 }
@@ -175,5 +185,6 @@ func (this *Db) GetNextTaskDate() string {
 	}
 	result := ""
 	res.Scan(&result)
+	result = strings.Split(result, "T")[0]
 	return result
 }
