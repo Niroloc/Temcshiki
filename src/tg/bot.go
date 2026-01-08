@@ -1,9 +1,12 @@
-package data
+package tg
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 
+	"github.com/Niroloc/Temcshiki/v2/src/data"
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
@@ -32,4 +35,22 @@ func (this *Bot) SendMessage(tgId int, msg string) error {
 	chatId := tu.ID(int64(tgId))
 	_, err := this.bot.SendMessage(ctx, tu.Message(chatId, msg))
 	return err
+}
+
+func (this *Bot) InfinitePolling(exportedData *data.Data) error {
+	updates, err := this.bot.UpdatesViaLongPolling(context.Background(), nil)
+	if err != nil {
+		this.logger.Error("Cannot start polling")
+		panic(err)
+	}
+	this.logger.Info("Starting polling")
+	for update := range updates {
+		if update.Message != nil {
+			tgId := int(update.Message.Chat.ID)
+			this.SendMessage(tgId, fmt.Sprint(exportedData.GetUsersMap()[tgId].Username))
+		} else if update.CallbackQuery != nil {
+			continue
+		}
+	}
+	return errors.New("Polling closed")
 }

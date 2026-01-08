@@ -1,13 +1,11 @@
 package data
 
-import "github.com/Niroloc/Temcshiki/v2/src/db"
-
 type User struct {
 	Id       int
 	Username string
-	Rights   db.UserRights
+	Rights   UserRights
 }
 
-func NewUser(id int, username string, rights db.UserRights) User {
+func NewUser(id int, username string, rights UserRights) User {
 	return User{id, username, rights}
 }

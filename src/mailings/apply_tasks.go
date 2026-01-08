@@ -1,12 +1,16 @@
 package mailings
 
-import "github.com/Niroloc/Temcshiki/v2/src/data"
+import (
+	"github.com/Niroloc/Temcshiki/v2/src/data"
+	"github.com/Niroloc/Temcshiki/v2/src/tasks"
+	"github.com/Niroloc/Temcshiki/v2/src/tg"
+)
 
-func ApplyTasks(data *data.Data) {
-	for _, task := range data.GetTasks() {
+func ApplyTasks(bot *tg.Bot, data *data.Data, tsks []tasks.Task) {
+	for _, task := range tsks {
 		if _, exists := task.Stages()[data.GetStage()]; !exists {
 			continue
 		}
-		task.Apply(data)
+		task.Apply(bot, data)
 	}
 }

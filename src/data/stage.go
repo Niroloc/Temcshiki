@@ -1,4 +1,4 @@
-package db
+package data
 
 type Stage int
 
