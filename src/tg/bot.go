@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/Niroloc/Temcshiki/v2/src/data"
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
@@ -35,6 +36,38 @@ func (this *Bot) SendMessage(tgId int, msg string) error {
 	chatId := tu.ID(int64(tgId))
 	_, err := this.bot.SendMessage(ctx, tu.Message(chatId, msg))
 	return err
+}
+
+func (this *Bot) SendMessageWithRests(tgId int, prefix string, rests []data.Rest) error {
+	ctx := context.Background()
+	chatId := tu.ID(int64(tgId))
+	restsButtons := []telego.InlineKeyboardButton{}
+	suffix := ""
+	for i, rest := range rests {
+		suffix += fmt.Sprintf(
+			"%d) %s: %s, встретимся на станции %s\n",
+			i+1,
+			rest.Name,
+			rest.Url,
+			rest.ClosestMetro,
+		)
+		restsButtons = append(
+			restsButtons,
+			tu.InlineKeyboardButton(rest.Name).WithCallbackData(fmt.Sprintf("rest_%d", rest.Id)),
+		)
+	}
+	buttonRows := [][]telego.InlineKeyboardButton{}
+	for i := 3; i < len(restsButtons); i += 3 {
+		buttonRows = append(buttonRows, restsButtons[i-3:i])
+	}
+	inlineKeyboard := tu.InlineKeyboard(buttonRows...)
+	if _, err := this.bot.SendMessage(
+		ctx,
+		tu.Message(chatId, strings.Join([]string{prefix, suffix}, "\n")).WithReplyMarkup(inlineKeyboard),
+	); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (this *Bot) InfinitePolling(exportedData *data.Data) error {

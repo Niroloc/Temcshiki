@@ -10,6 +10,7 @@ create table if not exists restoraunts (
     rest_name text NOT NULL,
     map_url text NOT NULL,
     reference_by INTEGER NOT NULL,
+    closest_metro text NOT NULL,
     votes INTEGER DEFAULT 0,
     FOREIGN KEY (reference_by) REFERENCES users(id)
  );

@@ -35,7 +35,7 @@ func InitTasks(exportedData *data.Data, bot *tg.Bot) *Tasks {
 		stageToTime: map[data.Stage]string{
 			data.CHOOSING:    "12:00:00",
 			data.VOTING:      "19:00:00",
-			data.REMINDING:   "19:00:00",
+			data.COUNTING:    "19:00:00",
 			data.APPROVING:   "19:00:00",
 			data.RESERVATING: "13:00:00",
 			data.REVIEWING:   "19:00:00",

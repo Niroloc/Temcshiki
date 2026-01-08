@@ -56,3 +56,7 @@ func (this *Data) GetDb() *Db {
 func (this *Data) GetUsersMap() map[int]User {
 	return this.tgIdToUser
 }
+
+func (this *Data) GetRestsForVoting() []Rest {
+	return this.db.GetQueuedRests()
+}

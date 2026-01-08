@@ -188,3 +188,21 @@ func (this *Db) GetNextTaskDate() string {
 	result = strings.Split(result, "T")[0]
 	return result
 }
+
+func (this *Db) GetQueuedRests() []Rest {
+	rows, err := this.connection.Query(
+		"SELECT id, rest_name, map_url, closest_metro FROM restoraunts r left join events e on r.id = e.rest_id WHERE e.id IS NULL",
+	)
+	result := []Rest{}
+	if err != nil {
+		this.logger.Error("Error while getting rests for voting")
+		this.logger.Error(err.Error())
+		return result
+	}
+	for rows.Next() {
+		rest := Rest{}
+		rows.Scan(&rest.Id, &rest.Name, &rest.Url, &rest.ClosestMetro)
+		result = append(result, rest)
+	}
+	return result
+}
