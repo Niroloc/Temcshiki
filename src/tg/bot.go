@@ -47,13 +47,13 @@ func (this *Bot) SendMessageWithRests(tgId int, prefix string, rests []data.Rest
 		suffix += fmt.Sprintf(
 			"%d) %s: %s, встретимся на станции %s\n",
 			i+1,
-			rest.Name,
-			rest.Url,
+			rest.RestName,
+			rest.MapUrl,
 			rest.ClosestMetro,
 		)
 		restsButtons = append(
 			restsButtons,
-			tu.InlineKeyboardButton(rest.Name).WithCallbackData(fmt.Sprintf("rest_%d", rest.Id)),
+			tu.InlineKeyboardButton(rest.RestName).WithCallbackData(fmt.Sprintf("rest_%d", rest.Id)),
 		)
 	}
 	buttonRows := [][]telego.InlineKeyboardButton{}
@@ -80,7 +80,7 @@ func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 	for update := range updates {
 		if update.Message != nil {
 			tgId := int(update.Message.Chat.ID)
-			this.SendMessage(tgId, fmt.Sprint(exportedData.GetUsersMap()[tgId].Username))
+			this.SendMessage(tgId, fmt.Sprint(exportedData.GetUsers()[tgId].Username))
 		} else if update.CallbackQuery != nil {
 			continue
 		}

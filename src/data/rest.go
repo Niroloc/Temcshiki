@@ -2,7 +2,8 @@ package data
 
 type Rest struct {
 	Id           int
-	Name         string
-	Url          string
+	RestName     string
+	MapUrl       string
+	ReferenceBy  int
 	ClosestMetro string
 }

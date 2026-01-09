@@ -25,6 +25,12 @@ type ExportedUser struct {
 	Rights   string
 }
 
+type ExportedEvent struct {
+	id        int
+	visitDate sql.NullString
+	restId    sql.NullInt64
+}
+
 func GetDb(file string) *Db {
 	db, err := sql.Open("sqlite3", file)
 	if err != nil {
@@ -111,11 +117,35 @@ func (this *Db) GetUsers() []ExportedUser {
 		if err != nil {
 			this.logger.Error("An error occured while parsing user")
 			this.logger.Error(err.Error())
-			panic(err)
+			continue
 		}
 		ans = append(ans, user)
 	}
 	return ans
+}
+
+func (this *Db) GetEvents() []ExportedEvent {
+	res := []ExportedEvent{}
+	rows, err := this.connection.Query("SELECT id, visit_date, rest_id FROM events")
+	if err != nil {
+		this.logger.Warn("An error occured while getting events from DB")
+		this.logger.Warn(err.Error())
+		return res
+	}
+	for rows.Next() {
+		event := ExportedEvent{}
+		err := rows.Scan(&event.id, &event.visitDate, &event.restId)
+		if err != nil {
+			this.logger.Error("An error occured while parsing event")
+			this.logger.Error(err.Error())
+			continue
+		}
+		if event.visitDate.Valid {
+			event.visitDate.String = strings.Split(event.visitDate.String, "T")[0]
+		}
+		res = append(res, event)
+	}
+	return res
 }
 
 func (this *Db) GetStage() Stage {
@@ -191,7 +221,7 @@ func (this *Db) GetNextTaskDate() string {
 
 func (this *Db) GetQueuedRests() []Rest {
 	rows, err := this.connection.Query(
-		"SELECT id, rest_name, map_url, closest_metro FROM restoraunts r left join events e on r.id = e.rest_id WHERE e.id IS NULL",
+		"SELECT id, rest_name, map_url, reference_by, closest_metro FROM restoraunts r left join events e on r.id = e.rest_id WHERE e.id IS NULL",
 	)
 	result := []Rest{}
 	if err != nil {
@@ -201,7 +231,7 @@ func (this *Db) GetQueuedRests() []Rest {
 	}
 	for rows.Next() {
 		rest := Rest{}
-		rows.Scan(&rest.Id, &rest.Name, &rest.Url, &rest.ClosestMetro)
+		rows.Scan(&rest.Id, &rest.RestName, &rest.ReferenceBy, &rest.MapUrl, &rest.ClosestMetro)
 		result = append(result, rest)
 	}
 	return result
