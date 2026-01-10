@@ -3,6 +3,7 @@ package data
 import (
 	"errors"
 	"reflect"
+	"time"
 
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	"github.com/Niroloc/Temcshiki/v2/src/utils"
@@ -84,5 +85,14 @@ func (this *Data) GetNewEvent() (Event, error) {
 }
 
 func (this *Data) GetDatesForVoting() []Date {
-	return []Date{} //ToDo: finish that
+	month := time.Now().Month()
+	year := time.Now().Year()
+	year += int(month) / 12
+	month = month%12 + 1
+	return utils.FilterMapValues(
+		this.commonData.dates,
+		func(d Date) bool {
+			return d.Candidate.Month() == month && d.Candidate.Year() == year
+		},
+	)
 }

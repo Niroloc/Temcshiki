@@ -23,11 +23,19 @@ func (this *StartVoting) Stages() map[data.Stage]struct{} {
 }
 
 func (this *StartVoting) Apply(bot *tg.Bot, exportData *data.Data) {
-	this.logger.Info("Starting cron task")
+	this.logger.Info("Starting start_voting cron task")
 	event, err := exportData.GetNewEvent()
 	if err != nil {
 		this.logger.Error(err.Error())
 		return
+	}
+	rests := []data.VotingObject{}
+	for _, rest := range exportData.GetRestsForVoting() {
+		rests = append(rests, rest)
+	}
+	dates := []data.VotingObject{}
+	for _, date := range exportData.GetDatesForVoting() {
+		dates = append(dates, date)
 	}
 	for userTgId, user := range exportData.GetUsers() {
 		if user.Rights == data.ADMIN || user.Rights == data.RESERVATOR || user.Rights == data.VISITOR {
@@ -35,7 +43,7 @@ func (this *StartVoting) Apply(bot *tg.Bot, exportData *data.Data) {
 				userTgId,
 				"Стартуем наше головосание по ресторанам:",
 				event.Id,
-				exportData.GetRestsForVoting(),
+				rests,
 			)
 			if err != nil {
 				this.logger.Warn("Seems like mesage with rests voting is not delivered")
@@ -44,7 +52,7 @@ func (this *StartVoting) Apply(bot *tg.Bot, exportData *data.Data) {
 				userTgId,
 				"И по датам!",
 				event.Id,
-				exportData.GetDatesForVoting(),
+				dates,
 			)
 			if err != nil {
 				this.logger.Warn("Seems like mesage with dates voting is not delivered")

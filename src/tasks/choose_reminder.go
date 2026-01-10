@@ -23,7 +23,7 @@ func (this *ChooseReminder) Stages() map[data.Stage]struct{} {
 }
 
 func (this *ChooseReminder) Apply(bot *tg.Bot, exportData *data.Data) {
-	this.logger.Info("Starting cron task")
+	this.logger.Info("Starting choose_reminder cron task")
 	for userTgId, user := range exportData.GetUsers() {
 		if user.Rights == data.ADMIN || user.Rights == data.RESERVATOR || user.Rights == data.VISITOR {
 			err := bot.SendMessage(userTgId,

@@ -39,6 +39,7 @@ func (this *Bot) SendMessage(tgId int, msg string) error {
 }
 
 func (this *Bot) SendMessageWithVoting(tgId int, prefix string, eventId int, objs []data.VotingObject) error {
+	this.logger.Info(fmt.Sprintf("Sending voting to %d", tgId))
 	ctx := context.Background()
 	chatId := tu.ID(int64(tgId))
 	restsButtons := []telego.InlineKeyboardButton{}
