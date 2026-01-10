@@ -1,6 +1,9 @@
 package data
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Date struct {
 	Id        int
@@ -11,4 +14,20 @@ type Date struct {
 func DateFromExported(exportedDate ExportedDate) Date {
 	candidate, _ := time.Parse(time.DateOnly, exportedDate.candidate)
 	return Date{exportedDate.id, candidate, exportedDate.eventId}
+}
+
+func (this Date) GetDescription(i int) string {
+	return fmt.Sprintf(
+		"%d) %s\n",
+		i+1,
+		this.Candidate.Format(time.DateOnly),
+	)
+}
+
+func (this Date) GetButtonTitle() string {
+	return this.Candidate.Format(time.DateOnly)
+}
+
+func (this Date) GetCallbackData(eventId int) string {
+	return fmt.Sprintf("date_%d_%d", eventId, this.Id)
 }

@@ -24,21 +24,31 @@ func (this *StartVoting) Stages() map[data.Stage]struct{} {
 
 func (this *StartVoting) Apply(bot *tg.Bot, exportData *data.Data) {
 	this.logger.Info("Starting cron task")
+	event, err := exportData.GetNewEvent()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return
+	}
 	for userTgId, user := range exportData.GetUsers() {
 		if user.Rights == data.ADMIN || user.Rights == data.RESERVATOR || user.Rights == data.VISITOR {
-			err := bot.SendMessageWithRests(
+			err = bot.SendMessageWithVoting(
 				userTgId,
 				"Стартуем наше головосание по ресторанам:",
+				event.Id,
 				exportData.GetRestsForVoting(),
 			)
 			if err != nil {
-				this.logger.Warn("Seems like mesage to all is not delivered")
+				this.logger.Warn("Seems like mesage with rests voting is not delivered")
 			}
-			// err = bot.SendMessageWithDates(
-			// 	userTgId,
-			// 	"И по датам!",
-			// 	exportData.GetDateForVoting(),
-			// )
+			err = bot.SendMessageWithVoting(
+				userTgId,
+				"И по датам!",
+				event.Id,
+				exportData.GetDatesForVoting(),
+			)
+			if err != nil {
+				this.logger.Warn("Seems like mesage with dates voting is not delivered")
+			}
 		}
 	}
 }

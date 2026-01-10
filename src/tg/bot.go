@@ -38,22 +38,16 @@ func (this *Bot) SendMessage(tgId int, msg string) error {
 	return err
 }
 
-func (this *Bot) SendMessageWithRests(tgId int, prefix string, rests []data.Rest) error {
+func (this *Bot) SendMessageWithVoting(tgId int, prefix string, eventId int, objs []data.VotingObject) error {
 	ctx := context.Background()
 	chatId := tu.ID(int64(tgId))
 	restsButtons := []telego.InlineKeyboardButton{}
 	suffix := ""
-	for i, rest := range rests {
-		suffix += fmt.Sprintf(
-			"%d) %s: %s, встретимся на станции %s\n",
-			i+1,
-			rest.RestName,
-			rest.MapUrl,
-			rest.ClosestMetro,
-		)
+	for i, o := range objs {
+		suffix += o.GetDescription(i)
 		restsButtons = append(
 			restsButtons,
-			tu.InlineKeyboardButton(rest.RestName).WithCallbackData(fmt.Sprintf("rest_%d", rest.Id)),
+			tu.InlineKeyboardButton(o.GetButtonTitle()).WithCallbackData(o.GetCallbackData(eventId)),
 		)
 	}
 	buttonRows := [][]telego.InlineKeyboardButton{}

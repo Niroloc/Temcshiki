@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
+	"github.com/Niroloc/Temcshiki/v2/src/utils"
 )
 
 type Data struct {
@@ -54,5 +55,34 @@ func (this *Data) GetDb() *Db {
 }
 
 func (this *Data) GetRestsForVoting() []Rest {
-	return this.db.GetQueuedRests()
+	visitedRestIds := map[int]struct{}{}
+	for _, e := range this.commonData.events {
+		if e.restId > -1 {
+			visitedRestIds[e.restId] = struct{}{}
+		}
+	}
+	return utils.FilterMapValues(
+		this.commonData.rests,
+		func(r Rest) bool {
+			_, exists := visitedRestIds[r.Id]
+			return !exists
+		},
+	)
+}
+
+func (this *Data) GetNewEvent() (Event, error) {
+	evs := utils.FilterMapValues(
+		this.commonData.events,
+		func(e Event) bool {
+			return e.restId == -1
+		},
+	)
+	if len(evs) == 0 {
+		return Event{}, errors.New("No new events")
+	}
+	return evs[0], nil
+}
+
+func (this *Data) GetDatesForVoting() []Date {
+	return []Date{} //ToDo: finish that
 }
