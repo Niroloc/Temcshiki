@@ -1,7 +1,5 @@
 package data
 
-import "time"
-
 type CommonData struct {
 	stage        Stage
 	nextTaskDate string
@@ -27,18 +25,23 @@ func MakeCommonData(dbWrapper *Db, tgIdToUser map[int]*User) *CommonData {
 	for _, user := range tgIdToUser {
 		result.users[user.Id] = user
 	}
-	for _, event := range dbWrapper.GetEvents() {
-		id := event.id
-		visitDate := time.Now()
-		if event.visitDate.Valid {
-			visitDate, _ = time.Parse(time.DateOnly, event.visitDate.String)
-		}
-		restId := -1
-		if event.restId.Valid {
-			restId = int(event.restId.Int64)
-		}
-		result.events[id] = Event{id, visitDate, restId}
+	for _, exportedEvent := range dbWrapper.GetEvents() {
+		event := EventFromExported(exportedEvent)
+		result.events[event.Id] = event
 	}
-	//ToDo: continue this shit
+	for _, rest := range dbWrapper.GetRests() {
+		result.rests[rest.Id] = rest
+	}
+	for _, review := range dbWrapper.GetReviews() {
+		result.reviews[review.Id] = review
+	}
+	for _, exportedDate := range dbWrapper.GetDates() {
+		date := DateFromExported(exportedDate)
+		result.dates[date.Id] = date
+	}
+	for _, exportedVote := range dbWrapper.GetVotes() {
+		vote := VoteFromExported(exportedVote)
+		result.votes[vote.Id] = vote
+	}
 	return result
 }

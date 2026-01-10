@@ -16,8 +16,9 @@ type Data struct {
 
 func CreateData(dbWrapper *Db) *Data {
 	tgIdToUser := map[int]*User{}
-	for _, user := range dbWrapper.GetUsers() {
-		tgIdToUser[user.TgId] = MakeUser(user.Id, user.TgId, user.Username, UserRights(user.Rights))
+	for _, exportedUser := range dbWrapper.GetUsers() {
+		user := UserFromExported(exportedUser)
+		tgIdToUser[user.TgId] = user
 	}
 	return &Data{
 		tgIdToUser: tgIdToUser,

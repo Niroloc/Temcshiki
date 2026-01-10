@@ -16,3 +16,13 @@ type UserHistory struct {
 func MakeUser(id int, tgId int, username string, rights UserRights) *User {
 	return &User{id, tgId, username, rights, UserHistory{nil, false}}
 }
+
+func UserFromExported(user ExportedUser) *User {
+	return &User{
+		Id:       user.Id,
+		TgId:     user.TgId,
+		Username: user.Username,
+		Rights:   UserRights(user.Rights),
+		History:  UserHistory{nil, false},
+	}
+}

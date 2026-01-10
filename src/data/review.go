@@ -11,5 +11,6 @@ type Review struct {
 	Id           int
 	UserId       int
 	RestorauntId int
-	category     ReviewCategory
+	Category     ReviewCategory
+	Rate         int
 }

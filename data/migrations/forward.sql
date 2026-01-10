@@ -46,7 +46,7 @@ create table if not exists votes (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (rest_id) REFERENCES restoraunts(id),
     FOREIGN KEY (date_id) REFERENCES possible_dates(id)
-)
+);
 
 create table if not exists next_task (
     id INTEGER UNIQUE,

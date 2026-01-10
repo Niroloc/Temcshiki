@@ -31,6 +31,19 @@ type ExportedEvent struct {
 	restId    sql.NullInt64
 }
 
+type ExportedDate struct {
+	id        int
+	candidate string
+	eventId   int
+}
+
+type ExportedVote struct {
+	id     int
+	userId int
+	restId sql.NullInt64
+	dateId sql.NullInt64
+}
+
 func GetDb(file string) *Db {
 	db, err := sql.Open("sqlite3", file)
 	if err != nil {
@@ -149,15 +162,106 @@ func (this *Db) GetEvents() []ExportedEvent {
 }
 
 func (this *Db) GetStage() Stage {
-	row, err := this.connection.Query("SELECT current_stage FROM stage")
-	if err != nil || !row.Next() {
+	rows, err := this.connection.Query("SELECT current_stage FROM stage")
+	if err != nil || !rows.Next() {
 		this.logger.Warn("Cannot get stage from DB")
 		this.logger.Warn(err.Error())
 		return CHOOSING
 	}
 	var stage int
-	row.Scan(&stage)
+	rows.Scan(&stage)
 	return Stage(stage)
+}
+
+func (this *Db) GetRests() []Rest {
+	res := []Rest{}
+	rows, err := this.connection.Query("SELECT id, rest_name, map_url, reference_by, closest_metro FROM restoraunts")
+	if err != nil {
+		this.logger.Error("An error occured while getting restorants")
+		this.logger.Error(err.Error())
+		return res
+	}
+	for rows.Next() {
+		rest := Rest{}
+		err := rows.Scan(&rest.Id, &rest.RestName, &rest.MapUrl, &rest.ReferenceBy, &rest.ClosestMetro)
+		if err != nil {
+			this.logger.Error("An error occured while parsing restorant")
+			this.logger.Error(err.Error())
+			continue
+		}
+		res = append(res, rest)
+	}
+	return res
+}
+
+func (this *Db) GetReviews() []Review {
+	res := []Review{}
+	rows, err := this.connection.Query(
+		"SELECT id, user_id, restoraunt_id, category, rate FROM reviews",
+	)
+	if err != nil {
+		this.logger.Error("An error occured while getting reviews")
+		this.logger.Error(err.Error())
+		return res
+	}
+	for rows.Next() {
+		review := Review{}
+		err := rows.Scan(&review.Id, &review.UserId, &review.RestorauntId, &review.Category, &review.Rate)
+		if err != nil {
+			this.logger.Error("An error occured while parsing review")
+			this.logger.Error(err.Error())
+			continue
+		}
+		res = append(res, review)
+	}
+	return res
+}
+
+func (this *Db) GetDates() []ExportedDate {
+	res := []ExportedDate{}
+	rows, err := this.connection.Query(
+		"SELECT id, candidate, event_id FROM dates",
+	)
+	if err != nil {
+		this.logger.Error("An error occured while getting dates from db")
+		this.logger.Error(err.Error())
+		return res
+	}
+	for rows.Next() {
+		date := ExportedDate{}
+		err := rows.Scan(&date.id, &date.candidate, &date.eventId)
+		if err != nil {
+			this.logger.Error("An error occured while parsing date")
+			this.logger.Error(err.Error())
+			continue
+		}
+		date.candidate = strings.Split(date.candidate, "T")[0]
+		res = append(res, date)
+	}
+	return res
+}
+
+func (this *Db) GetVotes() []ExportedVote {
+	res := []ExportedVote{}
+	rows, err := this.connection.Query(
+		"SELECT id, user_id, rest_id, date_id FROM votes",
+	)
+	if err != nil {
+		this.logger.Error("An error occured while getting votes from db")
+		this.logger.Error(err.Error())
+		return res
+	}
+	for rows.Next() {
+		vote := ExportedVote{}
+		err := rows.Scan(&vote.id, &vote.userId, &vote.restId, &vote.dateId)
+		if err != nil {
+			this.logger.Error("An error occured while parsing vote")
+			this.logger.Error(err.Error())
+			continue
+		}
+		res = append(res, vote)
+	}
+	return res
 }
 
 func (this *Db) UpdateStage(prevStage, curStage Stage) {
