@@ -1,5 +1,7 @@
 package data
 
+import "github.com/Niroloc/Temcshiki/v2/src/utils"
+
 type CommonData struct {
 	stage        Stage
 	nextTaskDate string
@@ -25,10 +27,10 @@ func MakeCommonData(dbWrapper *Db, tgIdToUser map[int]*User) *CommonData {
 	for _, user := range tgIdToUser {
 		result.users[user.Id] = user
 	}
-	for _, exportedEvent := range dbWrapper.GetEvents() {
-		event := EventFromExported(exportedEvent)
-		result.events[event.Id] = event
-	}
+	result.events = utils.ListToMap(
+		utils.ListMap(dbWrapper.GetEvents(), EventFromExported),
+		func(e Event) int { return e.Id },
+	)
 	for _, rest := range dbWrapper.GetRests() {
 		result.rests[rest.Id] = rest
 	}

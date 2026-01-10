@@ -62,7 +62,7 @@ func (this *Data) GetRestsForVoting() []Rest {
 			visitedRestIds[e.restId] = struct{}{}
 		}
 	}
-	return utils.FilterMapValues(
+	return utils.FilterValues(
 		this.commonData.rests,
 		func(r Rest) bool {
 			_, exists := visitedRestIds[r.Id]
@@ -72,7 +72,7 @@ func (this *Data) GetRestsForVoting() []Rest {
 }
 
 func (this *Data) GetNewEvent() (Event, error) {
-	evs := utils.FilterMapValues(
+	evs := utils.FilterValues(
 		this.commonData.events,
 		func(e Event) bool {
 			return e.restId == -1
@@ -89,7 +89,7 @@ func (this *Data) GetDatesForVoting() []Date {
 	year := time.Now().Year()
 	year += int(month) / 12
 	month = month%12 + 1
-	return utils.FilterMapValues(
+	return utils.FilterValues(
 		this.commonData.dates,
 		func(d Date) bool {
 			return d.Candidate.Month() == month && d.Candidate.Year() == year
