@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -339,4 +340,20 @@ func (this *Db) GetQueuedRests() []Rest {
 		result = append(result, rest)
 	}
 	return result
+}
+
+func (this *Db) CreateNewEvent() (Event, error) {
+	rows, err := this.connection.Query("INSERT INTO events (visit_date, rest_id) VALUES (NULL, NULL) RETURNS id")
+	if err != nil {
+		this.logger.Error("Error while adding new event into db")
+		this.logger.Error(err.Error())
+		return Event{}, err
+	}
+	id := 0
+	if rows.Next() {
+		rows.Scan(&id)
+	} else {
+		return Event{}, errors.New("No return value")
+	}
+	return Event{id, nil, -1}, nil
 }

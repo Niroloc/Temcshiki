@@ -84,6 +84,14 @@ func (this *Data) GetNewEvent() (Event, error) {
 	return evs[0], nil
 }
 
+func (this *Data) CreateNewEvent() {
+	e, err := this.db.CreateNewEvent()
+	if err != nil {
+		return
+	}
+	this.commonData.CreateNewEvent(e)
+}
+
 func (this *Data) GetDatesForVoting() []Date {
 	month := time.Now().Month()
 	year := time.Now().Year()

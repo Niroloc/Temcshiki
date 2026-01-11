@@ -47,3 +47,7 @@ func MakeCommonData(dbWrapper *Db, tgIdToUser map[int]*User) *CommonData {
 	}
 	return result
 }
+
+func (this *CommonData) CreateNewEvent(e Event) {
+	this.events[e.Id] = e
+}
