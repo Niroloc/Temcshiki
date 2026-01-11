@@ -9,6 +9,22 @@ import (
 	"github.com/Niroloc/Temcshiki/v2/src/utils"
 )
 
+func getNextWeekday(today time.Time, weekday time.Weekday) time.Time {
+	res := today.AddDate(0, 0, 1)
+	for res.Weekday() != weekday {
+		res = res.AddDate(0, 0, 1)
+	}
+	return res
+}
+
+func getPrevWeekDay(today time.Time, weekday time.Weekday) time.Time {
+	res := today.AddDate(0, 0, -1)
+	for res.Weekday() != weekday {
+		res = res.AddDate(0, 0, -1)
+	}
+	return res
+}
+
 type Data struct {
 	tgIdToUser map[int]*User
 	commonData *CommonData
@@ -45,14 +61,31 @@ func (this *Data) GetUsers() map[int]*User {
 	return this.tgIdToUser
 }
 
+func (this *Data) GetCommonData() *CommonData {
+	return this.commonData
+}
+
 func (this *Data) NextStage() {
 	prevStage := this.commonData.stage
 	curStage := this.commonData.stage.Next()
 	this.db.UpdateStage(prevStage, curStage)
-}
-
-func (this *Data) GetDb() *Db {
-	return this.db
+	curDate, _ := time.Parse(time.DateOnly, this.commonData.nextTaskDate)
+	var nextDate time.Time
+	if curStage == CHOOSING {
+		nextDate = getNextWeekday(curDate, time.Monday)
+	} else if curStage == VOTING {
+		nextDate = getNextWeekday(curDate, time.Sunday)
+	} else if curStage == COUNTING {
+		nextDate = getNextWeekday(curDate, time.Sunday)
+	} else if curStage == REMINDING {
+		eventDate := *this.commonData.GetNextEvent().visitDate
+		nextDate = getPrevWeekDay(eventDate, time.Monday)
+	} else if curStage == RESERVATING {
+		nextDate = getNextWeekday(curDate, time.Tuesday)
+	} else if curStage == REVIEWING {
+		nextDate = *this.commonData.GetNextEvent().visitDate
+	}
+	this.db.UpdateNextTaskDate(nextDate)
 }
 
 func (this *Data) GetRestsForVoting() []Rest {
@@ -103,4 +136,8 @@ func (this *Data) GetDatesForVoting() []Date {
 			return d.Candidate.Month() == month && d.Candidate.Year() == year
 		},
 	)
+}
+
+func (this *Data) GetNextTaskDate() string {
+	return this.db.GetNextTaskDate()
 }

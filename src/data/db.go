@@ -53,14 +53,6 @@ func GetDb(file string) *Db {
 	return &Db{db, logger.GetLogger(reflect.TypeFor[Db]())}
 }
 
-func getNextSunday(today time.Time) time.Time {
-	res := today.AddDate(0, 0, 1)
-	for res.Weekday() != time.Sunday {
-		res = res.AddDate(0, 0, 1)
-	}
-	return res
-}
-
 func (this *Db) InitDb(migration_file string) {
 	query, err := os.ReadFile(migration_file)
 	if err != nil {
@@ -102,8 +94,8 @@ func (this *Db) InitDb(migration_file string) {
 	}
 	res, err = this.connection.Query("SELECT dt FROM next_task WHERE id = 0")
 	if err != nil || !res.Next() {
-		this.logger.Warn("No next task date scheduled, inserting next Sunday")
-		nextTaskDay := getNextSunday(time.Now())
+		this.logger.Warn("No next task date scheduled, inserting next Monday")
+		nextTaskDay := getNextWeekday(time.Now(), time.Monday)
 		this.logger.Info(nextTaskDay.Format(time.DateOnly))
 		if _, err := this.connection.Exec(
 			fmt.Sprintf(
@@ -276,38 +268,17 @@ func (this *Db) UpdateStage(prevStage, curStage Stage) {
 		this.logger.Warn("Error while updating stage in db, rollback to default")
 		this.GetStage()
 	}
+}
 
-	prevDate, err := time.Parse(time.DateOnly, this.GetNextTaskDate())
+func (this *Db) UpdateNextTaskDate(updatedDate time.Time) {
+	_, err := this.connection.Exec(
+		fmt.Sprintf(
+			"UPDATE next_task SET dt = '%d' WHERE id = 0",
+			updatedDate.Format(time.DateOnly),
+		),
+	)
 	if err != nil {
-		panic(err)
-	}
-	nextDate := getNextSunday(prevDate)
-	if curStage == REVIEWING {
-		res, err := this.connection.Query("SELECT visit_date FROM events WHERE visited = 0")
-		if err != nil || !res.Next() {
-			this.logger.Error("Cannot extract next event day from events, use next Sunday")
-		} else {
-			nextDateStr := ""
-			res.Scan(&nextDateStr)
-			nextDate, err = time.Parse(time.DateOnly, nextDateStr)
-			if err != nil {
-				this.logger.Error("Cannot parse next event day from events, use next Sunday")
-				nextDate = getNextSunday(prevDate)
-			}
-		}
-		this.connection.Exec(
-			fmt.Sprintf(
-				"UPDATE next_task SET dt = '%s' WHERE id = 0",
-				nextDate.Format(time.DateOnly),
-			),
-		)
-	} else {
-		this.connection.Exec(
-			fmt.Sprintf(
-				"UPDATE next_task SET dt = '%s' WHERE id = 0",
-				nextDate.Format(time.DateOnly),
-			),
-		)
+		this.logger.Error("Next task date was not updated")
 	}
 }
 

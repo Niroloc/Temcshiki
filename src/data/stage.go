@@ -2,12 +2,14 @@ package data
 
 type Stage int
 
-const CHOOSING Stage = 0
-const VOTING Stage = 1
-const COUNTING Stage = 2
-const APPROVING Stage = 3
-const RESERVATING Stage = 4
-const REVIEWING Stage = 5
+const (
+	CHOOSING    Stage = 0
+	VOTING      Stage = 1
+	COUNTING    Stage = 2
+	REMINDING   Stage = 3
+	RESERVATING Stage = 4
+	REVIEWING   Stage = 5
+)
 
 func (this *Stage) Next() Stage {
 	(*this) = ((*this) + 1) % 6

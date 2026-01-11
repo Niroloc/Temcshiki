@@ -51,3 +51,11 @@ func MakeCommonData(dbWrapper *Db, tgIdToUser map[int]*User) *CommonData {
 func (this *CommonData) CreateNewEvent(e Event) {
 	this.events[e.Id] = e
 }
+
+func (this *CommonData) GetNextEvent() Event {
+	id := 0
+	for i, _ := range this.events {
+		id = max(id, i)
+	}
+	return this.events[id]
+}

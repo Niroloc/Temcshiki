@@ -36,7 +36,7 @@ func InitTasks(exportedData *data.Data, bot *tg.Bot) *Tasks {
 			data.CHOOSING:    "12:00:00",
 			data.VOTING:      "19:00:00",
 			data.COUNTING:    "19:00:00",
-			data.APPROVING:   "19:00:00",
+			data.REMINDING:   "19:00:00",
 			data.RESERVATING: "13:00:00",
 			data.REVIEWING:   "19:00:00",
 		},
@@ -56,11 +56,17 @@ func (this *Tasks) applyTasks() {
 
 func (this *Tasks) Loop() {
 	for true {
+		if this.scheduled != nil && this.scheduled.Compare(time.Now()) <= 0 {
+			this.scheduled = nil
+		}
+		if this.scheduled != nil {
+			time.Sleep(this.scheduled.Sub(time.Now()))
+		}
 		ts, exists := this.stageToTime[this.exportedData.GetStage()]
 		if !exists {
 			ts = "19:00:00"
 		}
-		date := this.exportedData.GetDb().GetNextTaskDate()
+		date := this.exportedData.GetNextTaskDate()
 		taskTime, err := time.Parse(time.DateTime, strings.Join([]string{date, ts}, " "))
 		if err != nil {
 			this.logger.Error("Error while scheduling new task")
@@ -68,13 +74,6 @@ func (this *Tasks) Loop() {
 			time.Sleep(time.Second * 10)
 		}
 		delay := taskTime.Sub(time.Now())
-		if this.scheduled != nil {
-			if this.scheduled.Compare(time.Now()) <= 0 {
-				this.scheduled = nil
-			} else {
-				time.Sleep(delay)
-			}
-		}
 		time.AfterFunc(delay, this.applyTasks)
 		this.scheduled = &taskTime
 	}
