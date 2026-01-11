@@ -84,6 +84,8 @@ func (this *Data) NextStage() {
 		nextDate = getNextWeekday(curDate, time.Tuesday)
 	} else if curStage == REVIEWING {
 		nextDate = *this.commonData.GetNextEvent().visitDate
+	} else {
+		nextDate = time.Now().AddDate(0, 0, 1)
 	}
 	this.db.UpdateNextTaskDate(nextDate)
 }
