@@ -1,7 +1,20 @@
 package utils
 
+type List[V any] []V
+type Map[K comparable, V any] map[K]V
+
 type filter[V any] func(V) bool
 type mapper[X, Y any] func(X) Y
+
+func (this *List[V]) Filter(f filter[V]) List[V] {
+	res := List[V]{}
+	for _, e := range *this {
+		if f(e) {
+			res = append(res, e)
+		}
+	}
+	return res
+}
 
 func FilterValuesToMap[V any](mp map[int]V, f filter[V]) map[int]V {
 	res := map[int]V{}

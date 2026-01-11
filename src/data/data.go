@@ -71,20 +71,18 @@ func (this *Data) NextStage() {
 	this.db.UpdateStage(prevStage, curStage)
 	curDate, _ := time.Parse(time.DateOnly, this.commonData.nextTaskDate)
 	var nextDate time.Time
-	if curStage == CHOOSING {
+	switch curStage {
+	case CHOOSING:
 		nextDate = getNextWeekday(curDate, time.Monday)
-	} else if curStage == VOTING {
+	case COUNTING:
 		nextDate = getNextWeekday(curDate, time.Sunday)
-	} else if curStage == COUNTING {
-		nextDate = getNextWeekday(curDate, time.Sunday)
-	} else if curStage == REMINDING {
-		eventDate := *this.commonData.GetNextEvent().visitDate
-		nextDate = getPrevWeekDay(eventDate, time.Monday)
-	} else if curStage == RESERVATING {
+	case REMINDING:
+		nextDate = getPrevWeekDay(*this.commonData.GetNextEvent().visitDate, time.Monday)
+	case RESERVATING:
 		nextDate = getNextWeekday(curDate, time.Tuesday)
-	} else if curStage == REVIEWING {
+	case REVIEWING:
 		nextDate = *this.commonData.GetNextEvent().visitDate
-	} else {
+	default:
 		nextDate = time.Now().AddDate(0, 0, 1)
 	}
 	this.db.UpdateNextTaskDate(nextDate)
