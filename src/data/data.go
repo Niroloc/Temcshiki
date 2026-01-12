@@ -126,14 +126,15 @@ func (this *Data) CreateNewEvent() {
 }
 
 func (this *Data) GetDatesForVoting() []Date {
-	month := time.Now().Month()
-	year := time.Now().Year()
-	year += int(month) / 12
-	month = month%12 + 1
+	ev, err := this.GetNewEvent()
+	if err != nil {
+		this.logger.Error("No dates for the new event!")
+		return []Date{}
+	}
 	return utils.FilterValues(
 		this.commonData.dates,
 		func(d Date) bool {
-			return d.Candidate.Month() == month && d.Candidate.Year() == year
+			return ev.Id == d.EventId
 		},
 	)
 }
