@@ -39,10 +39,11 @@ type ExportedDate struct {
 }
 
 type ExportedVote struct {
-	id     int
-	userId int
-	restId sql.NullInt64
-	dateId sql.NullInt64
+	id      int
+	userId  int
+	eventId int
+	restId  sql.NullInt64
+	dateId  sql.NullInt64
 }
 
 func GetDb(file string) *Db {
@@ -273,7 +274,7 @@ func (this *Db) UpdateStage(prevStage, curStage Stage) {
 func (this *Db) UpdateNextTaskDate(updatedDate time.Time) {
 	_, err := this.connection.Exec(
 		fmt.Sprintf(
-			"UPDATE next_task SET dt = '%d' WHERE id = 0",
+			"UPDATE next_task SET dt = '%s' WHERE id = 0",
 			updatedDate.Format(time.DateOnly),
 		),
 	)

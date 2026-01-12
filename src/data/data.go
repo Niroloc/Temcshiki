@@ -142,3 +142,41 @@ func (this *Data) GetDatesForVoting() []Date {
 func (this *Data) GetNextTaskDate() string {
 	return this.db.GetNextTaskDate()
 }
+
+func (this *Data) GetWinnerDate(event Event) Date {
+	votesByDateId := map[int]int{}
+	for _, v := range utils.FilterValues(
+		this.commonData.votes,
+		func(v Vote) bool {
+			return v.EventId == event.Id && v.DateId > -1
+		},
+	) {
+		votesByDateId[v.DateId]++
+	}
+	winnerId := -1
+	for id, votes := range votesByDateId {
+		if votes > votesByDateId[winnerId] {
+			winnerId = id
+		}
+	}
+	return this.commonData.dates[winnerId]
+}
+
+func (this *Data) GetWinnerRest(event Event) Rest {
+	votesByRestId := map[int]int{}
+	for _, v := range utils.FilterValues(
+		this.commonData.votes,
+		func(v Vote) bool {
+			return v.EventId == event.Id && v.RestId > -1
+		},
+	) {
+		votesByRestId[v.RestId]++
+	}
+	winnerId := -1
+	for id, votes := range votesByRestId {
+		if votes > votesByRestId[winnerId] {
+			winnerId = id
+		}
+	}
+	return this.commonData.rests[winnerId]
+}

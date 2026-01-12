@@ -41,6 +41,7 @@ create table if not exists dates (
 create table if not exists votes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
+    event_id INTEGER NOT NULL,
     rest_id INTEGER DEFAULT NULL,
     date_id INTEGER DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
