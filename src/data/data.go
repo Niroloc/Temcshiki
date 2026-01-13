@@ -77,11 +77,11 @@ func (this *Data) NextStage() {
 	case COUNTING:
 		nextDate = getNextWeekday(curDate, time.Sunday)
 	case REMINDING:
-		nextDate = getPrevWeekDay(*this.commonData.GetNextEvent().visitDate, time.Monday)
+		nextDate = getPrevWeekDay(*this.commonData.GetNextEvent().VisitDate, time.Monday)
 	case RESERVATING:
 		nextDate = getNextWeekday(curDate, time.Tuesday)
 	case REVIEWING:
-		nextDate = *this.commonData.GetNextEvent().visitDate
+		nextDate = *this.commonData.GetNextEvent().VisitDate
 	default:
 		nextDate = time.Now().AddDate(0, 0, 1)
 	}
@@ -91,8 +91,8 @@ func (this *Data) NextStage() {
 func (this *Data) GetRestsForVoting() []Rest {
 	visitedRestIds := map[int]struct{}{}
 	for _, e := range this.commonData.events {
-		if e.restId > -1 {
-			visitedRestIds[e.restId] = struct{}{}
+		if e.RestId > -1 {
+			visitedRestIds[e.RestId] = struct{}{}
 		}
 	}
 	return utils.FilterValues(
@@ -108,7 +108,7 @@ func (this *Data) GetNewEvent() (Event, error) {
 	evs := utils.FilterValues(
 		this.commonData.events,
 		func(e Event) bool {
-			return e.restId == -1
+			return e.RestId == -1
 		},
 	)
 	if len(evs) == 0 {

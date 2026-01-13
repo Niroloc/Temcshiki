@@ -30,6 +30,7 @@ type ExportedEvent struct {
 	id        int
 	visitDate sql.NullString
 	restId    sql.NullInt64
+	isVisited int
 }
 
 type ExportedDate struct {
@@ -133,7 +134,7 @@ func (this *Db) GetUsers() []ExportedUser {
 
 func (this *Db) GetEvents() []ExportedEvent {
 	res := []ExportedEvent{}
-	rows, err := this.connection.Query("SELECT id, visit_date, rest_id FROM events")
+	rows, err := this.connection.Query("SELECT id, visit_date, rest_id, is_visited FROM events")
 	if err != nil {
 		this.logger.Warn("An error occured while getting events from DB")
 		this.logger.Warn(err.Error())
@@ -141,7 +142,7 @@ func (this *Db) GetEvents() []ExportedEvent {
 	}
 	for rows.Next() {
 		event := ExportedEvent{}
-		err := rows.Scan(&event.id, &event.visitDate, &event.restId)
+		err := rows.Scan(&event.id, &event.visitDate, &event.restId, &event.isVisited)
 		if err != nil {
 			this.logger.Error("An error occured while parsing event")
 			this.logger.Error(err.Error())
@@ -238,7 +239,7 @@ func (this *Db) GetDates() []ExportedDate {
 func (this *Db) GetVotes() []ExportedVote {
 	res := []ExportedVote{}
 	rows, err := this.connection.Query(
-		"SELECT id, user_id, rest_id, date_id FROM votes",
+		"SELECT id, user_id, event_id, rest_id, date_id FROM votes",
 	)
 	if err != nil {
 		this.logger.Error("An error occured while getting votes from db")
@@ -247,7 +248,7 @@ func (this *Db) GetVotes() []ExportedVote {
 	}
 	for rows.Next() {
 		vote := ExportedVote{}
-		err := rows.Scan(&vote.id, &vote.userId, &vote.restId, &vote.dateId)
+		err := rows.Scan(&vote.id, &vote.userId, &vote.eventId, &vote.restId, &vote.dateId)
 		if err != nil {
 			this.logger.Error("An error occured while parsing vote")
 			this.logger.Error(err.Error())

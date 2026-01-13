@@ -28,6 +28,7 @@ create table if not exists events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     visit_date DATE DEFAULT NULL,
     rest_id INTEGER DEFAULT NULL,
+    is_visited INTEGER DEFAULT 0,
     FOREIGN KEY (rest_id) REFERENCES restoraunts(id)
 );
 
@@ -44,6 +45,7 @@ create table if not exists votes (
     event_id INTEGER NOT NULL,
     rest_id INTEGER DEFAULT NULL,
     date_id INTEGER DEFAULT NULL,
+    FOREIGN KEY (event_id) REFERENCES events(id),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (rest_id) REFERENCES restoraunts(id),
     FOREIGN KEY (date_id) REFERENCES possible_dates(id)

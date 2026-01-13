@@ -4,8 +4,9 @@ import "time"
 
 type Event struct {
 	Id        int
-	visitDate *time.Time
-	restId    int
+	VisitDate *time.Time
+	RestId    int
+	IsVisited bool
 }
 
 func EventFromExported(event ExportedEvent) Event {
@@ -19,5 +20,5 @@ func EventFromExported(event ExportedEvent) Event {
 	if event.restId.Valid {
 		restId = int(event.restId.Int64)
 	}
-	return Event{id, visitDate, restId}
+	return Event{id, visitDate, restId, event.isVisited == 1}
 }
