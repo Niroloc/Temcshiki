@@ -108,11 +108,14 @@ func (this *Data) GetNewEvent() (Event, error) {
 	evs := utils.FilterValues(
 		this.commonData.events,
 		func(e Event) bool {
-			return e.RestId == -1
+			return !e.IsVisited
 		},
 	)
 	if len(evs) == 0 {
 		return Event{}, errors.New("No new events")
+	}
+	if len(evs) > 1 {
+		this.logger.Warn("There are more than one unvisited event")
 	}
 	return evs[0], nil
 }
@@ -179,4 +182,8 @@ func (this *Data) GetWinnerRest(event Event) Rest {
 		}
 	}
 	return this.commonData.rests[winnerId]
+}
+
+func (this *Data) GetRestById(id int) Rest {
+	return this.commonData.rests[id]
 }

@@ -1,6 +1,9 @@
 package data
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Event struct {
 	Id        int
@@ -21,4 +24,16 @@ func EventFromExported(event ExportedEvent) Event {
 		restId = int(event.restId.Int64)
 	}
 	return Event{id, visitDate, restId, event.isVisited == 1}
+}
+
+func (this Event) GetDescription(i int) string {
+	return ""
+}
+
+func (this Event) GetButtonTitle() string {
+	return "Пойду!"
+}
+
+func (this Event) GetCallbackData(eventId int) string {
+	return fmt.Sprintf("approve_%d", eventId)
 }

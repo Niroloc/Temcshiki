@@ -56,7 +56,7 @@ func (this *Counting) Apply(bot *tg.Bot, exportData *data.Data) {
 			bot.SendMessage(
 				userTgId,
 				fmt.Sprintf(
-					"Ребята идут в %s %s",
+					"Ребята идут в %s, %s",
 					winnerRest.RestName,
 					winnerDate.Candidate,
 				),

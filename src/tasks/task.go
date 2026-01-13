@@ -30,6 +30,9 @@ func InitTasks(exportedData *data.Data, bot *tg.Bot) *Tasks {
 		bot:          bot,
 		tasks: []Task{
 			NewChooseReminder(),
+			NewStartVoting(),
+			NewCounting(),
+			NewReminding(),
 		},
 		scheduled: nil,
 		stageToTime: map[data.Stage]string{

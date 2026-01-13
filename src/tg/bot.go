@@ -52,8 +52,8 @@ func (this *Bot) SendMessageWithVoting(tgId int, prefix string, eventId int, obj
 		)
 	}
 	buttonRows := [][]telego.InlineKeyboardButton{}
-	for i := 3; i < len(restsButtons); i += 3 {
-		buttonRows = append(buttonRows, restsButtons[i-3:i])
+	for i := 0; i < len(restsButtons); i += 3 {
+		buttonRows = append(buttonRows, restsButtons[i:i+3])
 	}
 	inlineKeyboard := tu.InlineKeyboard(buttonRows...)
 	if _, err := this.bot.SendMessage(
