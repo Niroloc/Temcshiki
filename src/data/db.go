@@ -316,7 +316,7 @@ func (this *Db) GetQueuedRests() []Rest {
 }
 
 func (this *Db) CreateNewEvent() (Event, error) {
-	rows, err := this.connection.Query("INSERT INTO events (visit_date, rest_id) VALUES (NULL, NULL) RETURNS id")
+	rows, err := this.connection.Query("INSERT INTO events (visit_date, rest_id, is_visited) VALUES (NULL, NULL, 0) RETURNS id")
 	if err != nil {
 		this.logger.Error("Error while adding new event into db")
 		this.logger.Error(err.Error())
@@ -328,5 +328,5 @@ func (this *Db) CreateNewEvent() (Event, error) {
 	} else {
 		return Event{}, errors.New("No return value")
 	}
-	return Event{id, nil, -1}, nil
+	return Event{id, nil, -1, false}, nil
 }
