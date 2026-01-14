@@ -143,7 +143,7 @@ func (this *Data) GetDatesForVoting() []Date {
 }
 
 func (this *Data) GetNextTaskDate() string {
-	return this.db.GetNextTaskDate()
+	return this.commonData.nextTaskDate
 }
 
 func (this *Data) GetWinnerDate(event Event) Date {
@@ -162,7 +162,14 @@ func (this *Data) GetWinnerDate(event Event) Date {
 			winnerId = id
 		}
 	}
-	return this.commonData.dates[winnerId]
+	date := this.commonData.dates[winnerId]
+	{
+		dateForCopy := date.Candidate
+		event.VisitDate = &dateForCopy
+	}
+	this.commonData.events[event.Id] = event
+	this.db.UpdateEvent(event.Id, event)
+	return date
 }
 
 func (this *Data) GetWinnerRest(event Event) Rest {
@@ -181,9 +188,27 @@ func (this *Data) GetWinnerRest(event Event) Rest {
 			winnerId = id
 		}
 	}
-	return this.commonData.rests[winnerId]
+	rest := this.commonData.rests[winnerId]
+	event.RestId = rest.Id
+	this.commonData.events[event.Id] = event
+	this.db.UpdateEvent(event.Id, event)
+	return rest
 }
 
 func (this *Data) GetRestById(id int) Rest {
 	return this.commonData.rests[id]
+}
+
+func (this *Data) GetAcceptedVisitors(event Event) []User {
+	return utils.ListMap(
+		utils.FilterValues(
+			this.commonData.votes,
+			func(v Vote) bool {
+				return v.RestId == -1 && v.DateId == -1 && v.EventId == event.Id
+			},
+		),
+		func(v Vote) User {
+			return *this.commonData.users[v.UserId]
+		},
+	)
 }

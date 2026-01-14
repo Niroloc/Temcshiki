@@ -4,7 +4,7 @@ type ReviewCategory string
 
 const INTERIOR ReviewCategory = "interior"
 const SERVICE ReviewCategory = "service"
-const FOODR ReviewCategory = "food"
+const FOOD ReviewCategory = "food"
 const PRICES ReviewCategory = "prices"
 
 type Review struct {

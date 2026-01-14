@@ -330,3 +330,30 @@ func (this *Db) CreateNewEvent() (Event, error) {
 	}
 	return Event{id, nil, -1, false}, nil
 }
+
+func (this *Db) UpdateEvent(eventId int, event Event) {
+	visitDate := "NULL"
+	if event.VisitDate != nil {
+		visitDate = event.VisitDate.Format(time.DateOnly)
+	}
+	restId := "NULL"
+	if event.RestId != -1 {
+		restId = strconv.Itoa(event.RestId)
+	}
+	isVisited := "0"
+	if event.IsVisited {
+		isVisited = "1"
+	}
+	_, err := this.connection.Exec(
+		fmt.Sprintf(
+			"UPDATE events SET visit_date = %s, rest_id = %s, is_visited = %s WHERE id = %d",
+			visitDate,
+			restId,
+			isVisited,
+			eventId,
+		),
+	)
+	if err != nil {
+		this.logger.Error("An event is not updated")
+	}
+}
