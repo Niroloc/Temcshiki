@@ -63,7 +63,7 @@ func (this *Tasks) Loop() {
 			this.scheduled = nil
 		}
 		if this.scheduled != nil {
-			time.Sleep(this.scheduled.Sub(time.Now()))
+			time.Sleep(time.Minute)
 		}
 		ts, exists := this.stageToTime[this.exportedData.GetStage()]
 		if !exists {
