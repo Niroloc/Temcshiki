@@ -37,10 +37,10 @@ func (this *StartVoting) Apply(bot *tg.Bot, exportData *data.Data) {
 	for _, date := range exportData.GetDatesForVoting() {
 		dates = append(dates, date)
 	}
-	for userTgId, user := range exportData.GetUsers() {
+	for _, user := range exportData.GetUsers() {
 		if user.Rights == data.ADMIN || user.Rights == data.RESERVATOR || user.Rights == data.VISITOR {
 			err = bot.SendMessageWithVoting(
-				userTgId,
+				user,
 				"Стартуем наше головосание по ресторанам:",
 				event.Id,
 				rests,
@@ -49,7 +49,7 @@ func (this *StartVoting) Apply(bot *tg.Bot, exportData *data.Data) {
 				this.logger.Warn("Seems like mesage with rests voting is not delivered")
 			}
 			err = bot.SendMessageWithVoting(
-				userTgId,
+				user,
 				"И по датам!",
 				event.Id,
 				dates,

@@ -13,6 +13,21 @@ import (
 	tu "github.com/mymmrac/telego/telegoutil"
 )
 
+func GetDefaultKeyboard(user *data.User) *telego.InlineKeyboardMarkup {
+	switch user.Rights {
+	case data.ADMIN:
+		return tu.InlineKeyboard()
+	case data.RESERVATOR:
+		return tu.InlineKeyboard()
+	case data.VISITOR:
+		return tu.InlineKeyboard()
+	case data.SPECTATOR:
+		return tu.InlineKeyboard()
+	default:
+		return tu.InlineKeyboard()
+	}
+}
+
 type Bot struct {
 	bot    *telego.Bot
 	logger *logger.Logger
@@ -31,17 +46,18 @@ func CreateBot(botToken string) *Bot {
 	}
 }
 
-func (this *Bot) SendMessage(tgId int, msg string) error {
+func (this *Bot) SendMessage(user *data.User, msg string) error {
 	ctx := context.Background()
-	chatId := tu.ID(int64(tgId))
-	_, err := this.bot.SendMessage(ctx, tu.Message(chatId, msg))
+	this.logger.Info(fmt.Sprintf("Sending default message to %d", user.TgId))
+	chatId := tu.ID(int64(user.TgId))
+	_, err := this.bot.SendMessage(ctx, tu.Message(chatId, msg).WithReplyMarkup(GetDefaultKeyboard(user)))
 	return err
 }
 
-func (this *Bot) SendMessageWithVoting(tgId int, prefix string, eventId int, objs []data.VotingObject) error {
-	this.logger.Info(fmt.Sprintf("Sending voting to %d", tgId))
+func (this *Bot) SendMessageWithVoting(user *data.User, prefix string, eventId int, objs []data.VotingObject) error {
+	this.logger.Info(fmt.Sprintf("Sending voting to %d", user.TgId))
 	ctx := context.Background()
-	chatId := tu.ID(int64(tgId))
+	chatId := tu.ID(int64(user.TgId))
 	restsButtons := []telego.InlineKeyboardButton{}
 	suffix := ""
 	for i, o := range objs {
@@ -56,13 +72,11 @@ func (this *Bot) SendMessageWithVoting(tgId int, prefix string, eventId int, obj
 		buttonRows = append(buttonRows, restsButtons[i:i+3])
 	}
 	inlineKeyboard := tu.InlineKeyboard(buttonRows...)
-	if _, err := this.bot.SendMessage(
+	_, err := this.bot.SendMessage(
 		ctx,
 		tu.Message(chatId, strings.Join([]string{prefix, suffix}, "\n")).WithReplyMarkup(inlineKeyboard),
-	); err != nil {
-		return err
-	}
-	return nil
+	)
+	return err
 }
 
 func (this *Bot) InfinitePolling(exportedData *data.Data) error {
@@ -75,7 +89,12 @@ func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 	for update := range updates {
 		if update.Message != nil {
 			tgId := int(update.Message.Chat.ID)
-			this.SendMessage(tgId, fmt.Sprint(exportedData.GetUsers()[tgId].Username))
+			user, err := exportedData.GetUser(tgId)
+			if err != nil {
+				this.logger.Warn(fmt.Sprintf("An unknown user is trying to use the bot! Id: %d", tgId))
+				continue
+			}
+			this.SendMessage(user, fmt.Sprint(exportedData.GetUsers()[tgId].Username))
 		} else if update.CallbackQuery != nil {
 			continue
 		}

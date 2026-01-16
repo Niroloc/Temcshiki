@@ -33,10 +33,10 @@ func (this *Reminding) Apply(bot *tg.Bot, exportData *data.Data) {
 	}
 	objs := []data.VotingObject{event}
 	rest := exportData.GetRestById(event.RestId)
-	for userTgId, user := range exportData.GetUsers() {
+	for _, user := range exportData.GetUsers() {
 		if user.Rights == data.ADMIN || user.Rights == data.RESERVATOR || user.Rights == data.VISITOR {
 			bot.SendMessageWithVoting(
-				userTgId,
+				user,
 				fmt.Sprintf(
 					"Прошу прожать кнопочку в знак подтверждения посещения мероприятия %s в 16:00 в %s\nВстреча в метро %s в 15:45",
 					event.VisitDate.Format(time.DateOnly),

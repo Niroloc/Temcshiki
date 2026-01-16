@@ -61,19 +61,19 @@ func (this *Reviewing) Apply(bot *tg.Bot, exportData *data.Data) {
 	acceptedVisitors := exportData.GetAcceptedVisitors(event)
 	for _, user := range acceptedVisitors {
 		if user.Rights == data.ADMIN || user.Rights == data.RESERVATOR || user.Rights == data.VISITOR {
-			err := bot.SendMessageWithVoting(user.TgId, "Настаёт время голосовать! ГОЛОСОВАНИЕ!\nИнтерьер:", event.Id, interiors)
+			err := bot.SendMessageWithVoting(&user, "Настаёт время голосовать! ГОЛОСОВАНИЕ!\nИнтерьер:", event.Id, interiors)
 			if err != nil {
 				this.logger.Error("Message has not been delievered")
 			}
-			err = bot.SendMessageWithVoting(user.TgId, "Обслуживание:", event.Id, services)
+			err = bot.SendMessageWithVoting(&user, "Обслуживание:", event.Id, services)
 			if err != nil {
 				this.logger.Error("Message has not been delievered")
 			}
-			err = bot.SendMessageWithVoting(user.TgId, "Цены:", event.Id, prices)
+			err = bot.SendMessageWithVoting(&user, "Цены:", event.Id, prices)
 			if err != nil {
 				this.logger.Error("Message has not been delievered")
 			}
-			err = bot.SendMessageWithVoting(user.TgId, "Еда:", event.Id, foods)
+			err = bot.SendMessageWithVoting(&user, "Еда:", event.Id, foods)
 			if err != nil {
 				this.logger.Error("Message has not been delievered")
 			}

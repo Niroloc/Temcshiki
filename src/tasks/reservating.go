@@ -43,10 +43,10 @@ func (this *Reservating) Apply(bot *tg.Bot, exportData *data.Data) {
 		return
 	}
 	date := *event.VisitDate
-	for tgId, user := range exportData.GetUsers() {
+	for _, user := range exportData.GetUsers() {
 		if user.Rights == data.RESERVATOR || user.Rights == data.ADMIN {
 			err = bot.SendMessage(
-				tgId,
+				user,
 				fmt.Sprintf(
 					"Приветствую, дорогой бронировальщик! Нам нужно забронировать ресторан %s (%s) на %d человек %s в 16:00",
 					rest.RestName,

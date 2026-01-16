@@ -24,16 +24,16 @@ func (this *ChooseReminder) Stages() map[data.Stage]struct{} {
 
 func (this *ChooseReminder) Apply(bot *tg.Bot, exportData *data.Data) {
 	this.logger.Info("Starting choose_reminder cron task")
-	for userTgId, user := range exportData.GetUsers() {
+	for _, user := range exportData.GetUsers() {
 		if user.Rights == data.ADMIN || user.Rights == data.RESERVATOR || user.Rights == data.VISITOR {
-			err := bot.SendMessage(userTgId,
+			err := bot.SendMessage(user,
 				"Доброе напоминание о том, что сейчас самое время добавить вариантов для будущих мероприятий!")
 			if err != nil {
 				this.logger.Warn("Seems like mesage to all is not delivered")
 			}
 		}
 		if user.Rights == data.ADMIN {
-			err := bot.SendMessage(userTgId,
+			err := bot.SendMessage(user,
 				"А лично тебе было бы неплохо обозначить даты для будущих выборов!")
 			if err != nil {
 				this.logger.Warn("Message to admin is not delivered")

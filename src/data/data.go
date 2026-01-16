@@ -49,12 +49,12 @@ func (this *Data) GetStage() Stage {
 	return this.commonData.stage
 }
 
-func (this *Data) GetUser(tgId int) (User, error) {
+func (this *Data) GetUser(tgId int) (*User, error) {
 	if user, exists := this.tgIdToUser[tgId]; exists {
-		return *user, nil
+		return user, nil
 	}
 	this.logger.Warn("Unknown user has been searched")
-	return *MakeUser(-1, -1, "", SPECTATOR), errors.New("Unknown user")
+	return MakeUser(-1, -1, "", SPECTATOR), errors.New("Unknown user")
 }
 
 func (this *Data) GetUsers() map[int]*User {

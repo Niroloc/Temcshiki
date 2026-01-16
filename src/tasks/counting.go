@@ -33,17 +33,17 @@ func (this *Counting) Apply(bot *tg.Bot, exportData *data.Data) {
 	}
 	winnerDate := exportData.GetWinnerDate(event)
 	winnerRest := exportData.GetWinnerRest(event)
-	for userTgId, user := range exportData.GetUsers() {
+	for _, user := range exportData.GetUsers() {
 		if user.Rights == data.ADMIN || user.Rights == data.RESERVATOR || user.Rights == data.VISITOR {
 			bot.SendMessage(
-				userTgId,
+				user,
 				fmt.Sprintf(
 					"Голосование завершилось! был выбран ресторан: %s, и дата: %s",
 					winnerRest.RestName, winnerDate.Candidate.Format(time.DateOnly),
 				),
 			)
 			bot.SendMessage(
-				userTgId,
+				user,
 				fmt.Sprintf(
 					"Подробная информация по встрече:\nРесторан: %s\nСсылка: %s\nМетро для встречи в 15:45 : %s",
 					winnerRest.RestName,
@@ -54,7 +54,7 @@ func (this *Counting) Apply(bot *tg.Bot, exportData *data.Data) {
 		}
 		if user.Rights == data.SPECTATOR {
 			bot.SendMessage(
-				userTgId,
+				user,
 				fmt.Sprintf(
 					"Ребята идут в %s, %s",
 					winnerRest.RestName,
