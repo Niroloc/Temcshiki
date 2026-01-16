@@ -29,8 +29,10 @@ func GetDefaultKeyboard(user *data.User) *telego.InlineKeyboardMarkup {
 }
 
 type Bot struct {
-	bot    *telego.Bot
-	logger *logger.Logger
+	bot             *telego.Bot
+	callbackManager *CallbackFactoryManager
+	messageFactory  *MessageFactory
+	logger          *logger.Logger
 }
 
 func CreateBot(botToken string) *Bot {
@@ -41,8 +43,9 @@ func CreateBot(botToken string) *Bot {
 		panic(err)
 	}
 	return &Bot{
-		bot:    bot,
-		logger: logger,
+		bot:             bot,
+		callbackManager: CreatCallbackFactoryManager([]CallbackFactory{}),
+		logger:          logger,
 	}
 }
 
