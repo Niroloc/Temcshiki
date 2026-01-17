@@ -72,9 +72,13 @@ func CreateBot(botToken string) *Bot {
 		panic(err)
 	}
 	return &Bot{
-		bot:             bot,
-		callbackManager: CreateCallbackFactoryManager([]CallbackFactory{}),
-		logger:          logger,
+		bot: bot,
+		callbackManager: CreateCallbackFactoryManager(
+			[]CallbackFactory{
+				CreateUserFactory(),
+			},
+		),
+		logger: logger,
 	}
 }
 
