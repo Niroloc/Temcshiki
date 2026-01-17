@@ -11,10 +11,11 @@ type User struct {
 type UserHistory struct {
 	LastCallbackData *string
 	InputMode        bool
+	tempData         []any
 }
 
 func MakeUser(id int, tgId int, username string, rights UserRights) *User {
-	return &User{id, tgId, username, rights, UserHistory{nil, false}}
+	return &User{id, tgId, username, rights, UserHistory{nil, false, []any{}}}
 }
 
 func UserFromExported(user ExportedUser) *User {
@@ -23,6 +24,6 @@ func UserFromExported(user ExportedUser) *User {
 		TgId:     user.TgId,
 		Username: user.Username,
 		Rights:   UserRights(user.Rights),
-		History:  UserHistory{nil, false},
+		History:  UserHistory{nil, false, []any{}},
 	}
 }

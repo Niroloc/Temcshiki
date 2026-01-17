@@ -259,6 +259,29 @@ func (this *Db) GetVotes() []ExportedVote {
 	return res
 }
 
+func (this *Db) GetUrls() []Url {
+	res := []Url{}
+	rows, err := this.connection.Query(
+		"SELECT id, link FROM urls",
+	)
+	if err != nil {
+		this.logger.Error("An error occured while getting urls from db")
+		this.logger.Error(err.Error())
+		return res
+	}
+	for rows.Next() {
+		url := Url{}
+		err = rows.Scan(&url.Id, &url.Link)
+		if err != nil {
+			this.logger.Error("An error occured while parsing url data from db")
+			this.logger.Error(err.Error())
+			continue
+		}
+		res = append(res, url)
+	}
+	return res
+}
+
 func (this *Db) UpdateStage(prevStage, curStage Stage) {
 	_, err := this.connection.Exec(
 		fmt.Sprintf("UPDATE stage SET dt = %d WHERE dt = %d",

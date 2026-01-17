@@ -13,25 +13,54 @@ import (
 	tu "github.com/mymmrac/telego/telegoutil"
 )
 
-func GetDefaultKeyboard(user *data.User) *telego.InlineKeyboardMarkup {
+func getDefaultKeyboard(user *data.User) *telego.InlineKeyboardMarkup {
 	switch user.Rights {
 	case data.ADMIN:
-		return tu.InlineKeyboard()
+		return getAdminKeyboard()
 	case data.RESERVATOR:
-		return tu.InlineKeyboard()
+		return getRegularUserKeyboard()
 	case data.VISITOR:
-		return tu.InlineKeyboard()
+		return getRegularUserKeyboard()
 	case data.SPECTATOR:
-		return tu.InlineKeyboard()
+		return getSpectatorKeyboard()
 	default:
-		return tu.InlineKeyboard()
+		return nil
 	}
+}
+
+func getAdminKeyboard() *telego.InlineKeyboardMarkup {
+	return tu.InlineKeyboard(
+		[]telego.InlineKeyboardButton{
+			tu.InlineKeyboardButton("Добавить пользователя").WithCallbackData("user_add"),
+			tu.InlineKeyboardButton("Редактировать роли").WithCallbackData("user_edit"),
+		},
+		[]telego.InlineKeyboardButton{
+			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData("rating"),
+			tu.InlineKeyboardButton("Предложить ресторан").WithCallbackData("newrest"),
+		},
+	)
+}
+
+func getRegularUserKeyboard() *telego.InlineKeyboardMarkup {
+	return tu.InlineKeyboard(
+		[]telego.InlineKeyboardButton{
+			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData("rating"),
+			tu.InlineKeyboardButton("Предложить ресторан").WithCallbackData("newrest"),
+		},
+	)
+}
+
+func getSpectatorKeyboard() *telego.InlineKeyboardMarkup {
+	return tu.InlineKeyboard(
+		[]telego.InlineKeyboardButton{
+			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData("rating"),
+		},
+	)
 }
 
 type Bot struct {
 	bot             *telego.Bot
 	callbackManager *CallbackFactoryManager
-	messageFactory  *MessageFactory
 	logger          *logger.Logger
 }
 
@@ -44,7 +73,7 @@ func CreateBot(botToken string) *Bot {
 	}
 	return &Bot{
 		bot:             bot,
-		callbackManager: CreatCallbackFactoryManager([]CallbackFactory{}),
+		callbackManager: CreateCallbackFactoryManager([]CallbackFactory{}),
 		logger:          logger,
 	}
 }
@@ -53,7 +82,13 @@ func (this *Bot) SendMessage(user *data.User, msg string) error {
 	ctx := context.Background()
 	this.logger.Info(fmt.Sprintf("Sending default message to %d", user.TgId))
 	chatId := tu.ID(int64(user.TgId))
-	_, err := this.bot.SendMessage(ctx, tu.Message(chatId, msg).WithReplyMarkup(GetDefaultKeyboard(user)))
+	replyMarkup := getDefaultKeyboard(user)
+	var err error
+	if replyMarkup != nil {
+		_, err = this.bot.SendMessage(ctx, tu.Message(chatId, msg).WithReplyMarkup(replyMarkup))
+	} else {
+		_, err = this.bot.SendMessage(ctx, tu.Message(chatId, msg))
+	}
 	return err
 }
 
@@ -61,18 +96,18 @@ func (this *Bot) SendMessageWithVoting(user *data.User, prefix string, eventId i
 	this.logger.Info(fmt.Sprintf("Sending voting to %d", user.TgId))
 	ctx := context.Background()
 	chatId := tu.ID(int64(user.TgId))
-	restsButtons := []telego.InlineKeyboardButton{}
+	buts := []telego.InlineKeyboardButton{}
 	suffix := ""
 	for i, o := range objs {
 		suffix += o.GetDescription(i)
-		restsButtons = append(
-			restsButtons,
+		buts = append(
+			buts,
 			tu.InlineKeyboardButton(o.GetButtonTitle()).WithCallbackData(o.GetCallbackData(eventId)),
 		)
 	}
 	buttonRows := [][]telego.InlineKeyboardButton{}
-	for i := 0; i < len(restsButtons); i += 3 {
-		buttonRows = append(buttonRows, restsButtons[i:i+3])
+	for i := 0; i < len(buts); i += 3 {
+		buttonRows = append(buttonRows, buts[i:i+3])
 	}
 	inlineKeyboard := tu.InlineKeyboard(buttonRows...)
 	_, err := this.bot.SendMessage(
@@ -91,16 +126,33 @@ func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 	this.logger.Info("Starting polling")
 	for update := range updates {
 		if update.Message != nil {
-			tgId := int(update.Message.Chat.ID)
-			user, err := exportedData.GetUser(tgId)
-			if err != nil {
-				this.logger.Warn(fmt.Sprintf("An unknown user is trying to use the bot! Id: %d", tgId))
+			var user *data.User
+			if user, err = this.welcome(update.Message, exportedData); err != nil {
 				continue
 			}
-			this.SendMessage(user, fmt.Sprint(exportedData.GetUsers()[tgId].Username))
+			this.SendMessage(
+				user,
+				fmt.Sprintf(
+					"Добро пожаловать в бота Темщиков!\n"+
+						"Ваша роль: %s.\n"+
+						"Для действий нажмите на одну из кнопок ниже.",
+					user.Rights,
+				),
+			)
 		} else if update.CallbackQuery != nil {
-			continue
+			this.callbackManager.GetAndApplyFactory(update.CallbackQuery, exportedData)
 		}
 	}
 	return errors.New("Polling closed")
+}
+
+func (this *Bot) welcome(msg *telego.Message, exportedData *data.Data) (*data.User, error) {
+	tgId := msg.Chat.ID
+	this.logger.Info(fmt.Sprintf("User with id %d has written to the bot", tgId))
+	user, err := exportedData.GetUser(int(tgId))
+	if err != nil {
+		this.logger.Warn(fmt.Sprintf("An unknown user has written to the bot. ID: %d", tgId))
+		return nil, errors.New("Unknown user")
+	}
+	return user, nil
 }

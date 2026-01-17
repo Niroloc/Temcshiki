@@ -54,7 +54,7 @@ func (this *Data) GetUser(tgId int) (*User, error) {
 		return user, nil
 	}
 	this.logger.Warn("Unknown user has been searched")
-	return MakeUser(-1, -1, "", SPECTATOR), errors.New("Unknown user")
+	return nil, errors.New("Unknown user")
 }
 
 func (this *Data) GetUsers() map[int]*User {

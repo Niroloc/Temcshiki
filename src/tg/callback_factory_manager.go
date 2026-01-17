@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Niroloc/Temcshiki/v2/src/data"
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	"github.com/mymmrac/telego"
 )
@@ -14,7 +15,7 @@ type CallbackFactoryManager struct {
 	logger         *logger.Logger
 }
 
-func CreatCallbackFactoryManager(cfs []CallbackFactory) *CallbackFactoryManager {
+func CreateCallbackFactoryManager(cfs []CallbackFactory) *CallbackFactoryManager {
 	aliasToFactory := map[string]CallbackFactory{}
 	for _, cf := range cfs {
 		aliasToFactory[cf.GetAlias()] = cf
@@ -23,9 +24,18 @@ func CreatCallbackFactoryManager(cfs []CallbackFactory) *CallbackFactoryManager 
 	return &CallbackFactoryManager{aliasToFactory: aliasToFactory, logger: logger}
 }
 
-func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.CallbackQuery) {
-	fact := this.aliasToFactory[strings.Split(callbackQuery.Data, "_")[0]]
-	err := fact.ParseArguments(callbackQuery)
+func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.CallbackQuery, exportedData *data.Data) {
+	_, err := exportedData.GetUser(int(callbackQuery.Message.GetChat().ID))
+	if err != nil {
+		this.logger.Error(fmt.Sprintf("Unknown user is sending callback query. ID: %d", callbackQuery.Message.GetChat().ID))
+		return
+	}
+	fact, exists := this.aliasToFactory[strings.Split(callbackQuery.Data, "_")[0]]
+	if !exists {
+		this.logger.Error(fmt.Sprintf("Unknown callback factory for data: %s", callbackQuery.Data))
+		return
+	}
+	err = fact.ParseArguments(callbackQuery)
 	if err != nil {
 		this.logger.Error(
 			fmt.Sprintf(
@@ -34,8 +44,9 @@ func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.Cal
 				reflect.TypeOf(fact),
 			),
 		)
+		return
 	}
-	err = fact.Apply(callbackQuery)
+	err = fact.Apply(callbackQuery, exportedData)
 	if err != nil {
 		this.logger.Error(
 			fmt.Sprintf(

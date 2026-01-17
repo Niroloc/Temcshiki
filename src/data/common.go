@@ -11,6 +11,7 @@ type CommonData struct {
 	reviews      map[int]Review
 	dates        map[int]Date
 	votes        map[int]Vote
+	urls         map[int]Url
 }
 
 func MakeCommonData(dbWrapper *Db, tgIdToUser map[int]*User) *CommonData {
@@ -23,6 +24,7 @@ func MakeCommonData(dbWrapper *Db, tgIdToUser map[int]*User) *CommonData {
 		reviews:      map[int]Review{},
 		dates:        map[int]Date{},
 		votes:        map[int]Vote{},
+		urls:         map[int]Url{},
 	}
 	for _, user := range tgIdToUser {
 		result.users[user.Id] = user
@@ -45,6 +47,9 @@ func MakeCommonData(dbWrapper *Db, tgIdToUser map[int]*User) *CommonData {
 		vote := VoteFromExported(exportedVote)
 		result.votes[vote.Id] = vote
 	}
+	for _, url := range dbWrapper.GetUrls() {
+		result.urls[url.Id] = url
+	}
 	return result
 }
 
@@ -54,7 +59,7 @@ func (this *CommonData) CreateNewEvent(e Event) {
 
 func (this *CommonData) GetNextEvent() Event {
 	id := 0
-	for i, _ := range this.events {
+	for i := range this.events {
 		id = max(id, i)
 	}
 	return this.events[id]
