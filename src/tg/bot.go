@@ -78,9 +78,17 @@ func CreateBot(botToken string) *Bot {
 	}
 }
 
+func (this *Bot) SendMessageWithoutMarkup(user *data.User, msg string) error {
+	ctx := context.Background()
+	this.logger.Info(fmt.Sprintf("Sending message without markup to %s", user.Username))
+	chatId := tu.ID(int64(user.TgId))
+	_, err := this.bot.SendMessage(ctx, tu.Message(chatId, msg))
+	return err
+}
+
 func (this *Bot) SendMessage(user *data.User, msg string) error {
 	ctx := context.Background()
-	this.logger.Info(fmt.Sprintf("Sending default message to %d", user.TgId))
+	this.logger.Info(fmt.Sprintf("Sending default message to %s", user.Username))
 	chatId := tu.ID(int64(user.TgId))
 	replyMarkup := getDefaultKeyboard(user)
 	var err error
@@ -93,7 +101,7 @@ func (this *Bot) SendMessage(user *data.User, msg string) error {
 }
 
 func (this *Bot) SendMessageWithVoting(user *data.User, prefix string, eventId int, objs []data.VotingObject) error {
-	this.logger.Info(fmt.Sprintf("Sending voting to %d", user.TgId))
+	this.logger.Info(fmt.Sprintf("Sending voting to %s", user.Username))
 	ctx := context.Background()
 	chatId := tu.ID(int64(user.TgId))
 	buts := []telego.InlineKeyboardButton{}
@@ -114,6 +122,14 @@ func (this *Bot) SendMessageWithVoting(user *data.User, prefix string, eventId i
 		ctx,
 		tu.Message(chatId, strings.Join([]string{prefix, suffix}, "\n")).WithReplyMarkup(inlineKeyboard),
 	)
+	return err
+}
+
+func (this *Bot) SendMessageWithMarkup(user *data.User, msg string, markup *telego.InlineKeyboardMarkup) error {
+	this.logger.Info(fmt.Sprintf("Sending markup message to %s", user.Username))
+	ctx := context.Background()
+	chatId := tu.ID(int64(user.TgId))
+	_, err := this.bot.SendMessage(ctx, tu.Message(chatId, msg).WithReplyMarkup(markup))
 	return err
 }
 
@@ -140,7 +156,7 @@ func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 				),
 			)
 		} else if update.CallbackQuery != nil {
-			this.callbackManager.GetAndApplyFactory(update.CallbackQuery, exportedData)
+			this.callbackManager.GetAndApplyFactory(update.CallbackQuery, exportedData, this)
 		}
 	}
 	return errors.New("Polling closed")

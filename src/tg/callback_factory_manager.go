@@ -24,8 +24,8 @@ func CreateCallbackFactoryManager(cfs []CallbackFactory) *CallbackFactoryManager
 	return &CallbackFactoryManager{aliasToFactory: aliasToFactory, logger: logger}
 }
 
-func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.CallbackQuery, exportedData *data.Data) {
-	_, err := exportedData.GetUser(int(callbackQuery.Message.GetChat().ID))
+func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.CallbackQuery, exportedData *data.Data, bot *Bot) {
+	user, err := exportedData.GetUser(int(callbackQuery.Message.GetChat().ID))
 	if err != nil {
 		this.logger.Error(fmt.Sprintf("Unknown user is sending callback query. ID: %d", callbackQuery.Message.GetChat().ID))
 		return
@@ -35,6 +35,8 @@ func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.Cal
 		this.logger.Error(fmt.Sprintf("Unknown callback factory for data: %s", callbackQuery.Data))
 		return
 	}
+	user.History.InputMode = false
+	user.History.LastCallbackData = nil
 	err = fact.ParseArguments(callbackQuery)
 	if err != nil {
 		this.logger.Error(
@@ -46,7 +48,7 @@ func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.Cal
 		)
 		return
 	}
-	err = fact.Apply(callbackQuery, exportedData)
+	err = fact.Apply(callbackQuery, user, bot)
 	if err != nil {
 		this.logger.Error(
 			fmt.Sprintf(
