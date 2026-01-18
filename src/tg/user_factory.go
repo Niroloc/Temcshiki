@@ -2,12 +2,14 @@ package tg
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/Niroloc/Temcshiki/v2/src/data"
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
+	"github.com/Niroloc/Temcshiki/v2/src/utils"
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 )
@@ -28,7 +30,7 @@ type UserFactory struct {
 type UserFactoryArgs struct {
 	parsed    int
 	operation Operation
-	tgId      int
+	id        int
 	username  string
 	rights    data.UserRights
 }
@@ -37,7 +39,7 @@ func CreateUserFactoryArgs() UserFactoryArgs {
 	return UserFactoryArgs{
 		parsed:    0,
 		operation: "",
-		tgId:      -1,
+		id:        -1,
 		username:  "",
 	}
 }
@@ -82,7 +84,7 @@ func (this *UserFactoryArgs) parseNext(args []string) error {
 		if err != nil {
 			return errors.New("Error while parsing tgID" + err.Error())
 		}
-		this.tgId = tgId
+		this.id = tgId
 	} else if this.parsed == 2 {
 		this.username = args[2]
 	} else if this.parsed == 3 {
@@ -120,7 +122,17 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, bot
 			user.History.LastCallbackData = &cbd
 			return nil
 		case EDIT:
-			return nil
+			buts := utils.MapValues(
+				bot.exportData.GetUsers(),
+				func(u *data.User) telego.InlineKeyboardButton {
+					return tu.InlineKeyboardButton(u.Username).WithCallbackData(query.Data + fmt.Sprintf("_%d", u.Id))
+				},
+			)
+			rows := [][]telego.InlineKeyboardButton{}
+			for i := 0; i < len(buts); i++ {
+				rows = append(rows, buts[i:i+3])
+			}
+			return bot.SendMessageWithMarkup(user, "Выберите пользователя, для изменения", tu.InlineKeyboard(rows...))
 		default:
 			return nil
 		}

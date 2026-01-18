@@ -36,6 +36,14 @@ func FilterValues[V any](mp map[int]V, f filter[V]) []V {
 	return res
 }
 
+func MapValues[K comparable, V, W any](mp map[K]V, f mapper[V, W]) []W {
+	res := []W{}
+	for _, v := range mp {
+		res = append(res, f(v))
+	}
+	return res
+}
+
 func FilterList[V any](l []V, f filter[V]) []V {
 	res := []V{}
 	for _, v := range l {

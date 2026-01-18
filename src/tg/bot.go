@@ -60,11 +60,12 @@ func getSpectatorKeyboard() *telego.InlineKeyboardMarkup {
 
 type Bot struct {
 	bot             *telego.Bot
+	exportData      *data.Data
 	callbackManager *CallbackFactoryManager
 	logger          *logger.Logger
 }
 
-func CreateBot(botToken string) *Bot {
+func CreateBot(botToken string, exportData *data.Data) *Bot {
 	logger := logger.GetLogger(reflect.TypeFor[Bot]())
 	bot, err := telego.NewBot(botToken)
 	if err != nil {
@@ -72,7 +73,8 @@ func CreateBot(botToken string) *Bot {
 		panic(err)
 	}
 	return &Bot{
-		bot: bot,
+		bot:        bot,
+		exportData: exportData,
 		callbackManager: CreateCallbackFactoryManager(
 			[]CallbackFactory{
 				CreateUserFactory(),
