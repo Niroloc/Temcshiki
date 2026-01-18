@@ -222,3 +222,10 @@ func (this *Data) CreateNewUser(tgid int, username string, rights UserRights) *U
 	this.tgIdToUser[user.TgId] = user
 	return user
 }
+
+func (this *Data) UpdateUser(user *User, newUsername string, newRights UserRights) {
+	cur := this.commonData.users[user.Id]
+	cur.Rights = newRights
+	cur.Username = newUsername
+	this.db.UpdateUser(user.Id, cur)
+}

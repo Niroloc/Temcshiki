@@ -194,7 +194,11 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exp
 				return bot.SendMessage(user, "Мы не смогли добавить пользователя, разбираемся...")
 			}
 		case EDIT:
-			return nil
+			editedUser, err := exportedData.GetUser(this.args.id)
+			if err != nil {
+				return bot.SendMessage(user, "Мы не смогли найти пользователя для редактирования, разбираемся...")
+			}
+			exportedData.UpdateUser(editedUser, this.args.username, this.args.rights)
 		}
 		return bot.SendMessage(user, "Всё готово, шеф, принимаем работу.")
 	default:

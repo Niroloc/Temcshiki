@@ -137,6 +137,8 @@ func (this *Bot) SendMessageWithMarkup(user *data.User, msg string, markup *tele
 	return err
 }
 
+func (this *Bot) InputCallbackMode(msg *telego.Message, user *data.User)
+
 func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 	updates, err := this.bot.UpdatesViaLongPolling(context.Background(), nil)
 	if err != nil {
@@ -150,15 +152,28 @@ func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 			if user, err = this.welcome(update.Message, exportedData); err != nil {
 				continue
 			}
-			this.SendMessage(
-				user,
-				fmt.Sprintf(
-					"Добро пожаловать в бота Темщиков!\n"+
-						"Ваша роль: %s.\n"+
-						"Для действий нажмите на одну из кнопок ниже.",
-					user.Rights,
-				),
-			)
+			if user.History.InputMode {
+				markup := tu.InlineKeyboard(
+					[]telego.InlineKeyboardButton{
+						tu.InlineKeyboardButton("Добавить пользователя").WithCallbackData("user_add"),
+						tu.InlineKeyboardButton("Редактировать роли").WithCallbackData("user_edit"),
+					},
+				)
+				err := this.SendMessageWithMarkup()
+				if err != nil {
+					this.logger.Error(err.Error())
+				}
+			} else {
+				this.SendMessage(
+					user,
+					fmt.Sprintf(
+						"Добро пожаловать в бота Темщиков!\n"+
+							"Ваша роль: %s.\n"+
+							"Для действий нажмите на одну из кнопок ниже.",
+						user.Rights,
+					),
+				)
+			}
 		} else if update.CallbackQuery != nil {
 			this.callbackManager.GetAndApplyFactory(update.CallbackQuery, exportedData, this)
 		}

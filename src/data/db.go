@@ -378,6 +378,7 @@ func (this *Db) UpdateEvent(eventId int, event Event) {
 	)
 	if err != nil {
 		this.logger.Error("An event is not updated")
+		this.logger.Error(err.Error())
 	}
 }
 
@@ -403,4 +404,19 @@ func (this *Db) CreateNewUser(tgId int, username string, rights UserRights) *Use
 		return nil
 	}
 	return CreateUser(id, tgId, username, rights)
+}
+
+func (this *Db) UpdateUser(userId int, user *User) {
+	_, err := this.connection.Exec(
+		fmt.Sprintf(
+			"UPDATE users SET username = '%s', rights = '%s' WHERE id = %d",
+			user.Username,
+			user.Rights,
+			user.Id,
+		),
+	)
+	if err != nil {
+		this.logger.Error("User is not updated")
+		this.logger.Error(err.Error())
+	}
 }
