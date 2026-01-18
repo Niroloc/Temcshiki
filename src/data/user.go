@@ -14,7 +14,7 @@ type UserHistory struct {
 	tempData         []any
 }
 
-func MakeUser(id int, tgId int, username string, rights UserRights) *User {
+func CreateUser(id int, tgId int, username string, rights UserRights) *User {
 	return &User{id, tgId, username, rights, UserHistory{nil, false, []any{}}}
 }
 

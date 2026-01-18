@@ -48,7 +48,7 @@ func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.Cal
 		)
 		return
 	}
-	err = fact.Apply(callbackQuery, user, bot)
+	err = fact.Apply(callbackQuery, user, exportedData, bot)
 	if err != nil {
 		this.logger.Error(
 			fmt.Sprintf(

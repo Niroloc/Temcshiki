@@ -212,3 +212,13 @@ func (this *Data) GetAcceptedVisitors(event Event) []User {
 		},
 	)
 }
+
+func (this *Data) CreateNewUser(tgid int, username string, rights UserRights) *User {
+	user := this.db.CreateNewUser(tgid, username, rights)
+	if user == nil {
+		return nil
+	}
+	this.commonData.users[user.Id] = user
+	this.tgIdToUser[user.TgId] = user
+	return user
+}

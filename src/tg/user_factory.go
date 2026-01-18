@@ -99,7 +99,7 @@ func (this *UserFactoryArgs) parseNext(args []string) error {
 	return nil
 }
 
-func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, bot *Bot) error {
+func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exportedData *data.Data, bot *Bot) error {
 	switch this.args.parsed {
 	case 0:
 		this.logger.Info("Stage 0 for user factory")
@@ -117,32 +117,92 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, bot
 			if err != nil {
 				return err
 			}
-			user.History.InputMode = true
-			cbd := strings.Clone(query.Data)
-			user.History.LastCallbackData = &cbd
+			continueWithInputMode(user, query.Data)
 			return nil
 		case EDIT:
 			buts := utils.MapValues(
-				bot.exportData.GetUsers(),
+				exportedData.GetUsers(),
 				func(u *data.User) telego.InlineKeyboardButton {
 					return tu.InlineKeyboardButton(u.Username).WithCallbackData(query.Data + fmt.Sprintf("_%d", u.Id))
 				},
 			)
 			rows := [][]telego.InlineKeyboardButton{}
-			for i := 0; i < len(buts); i++ {
+			for i := 0; i < len(buts); i += 3 {
 				rows = append(rows, buts[i:i+3])
 			}
 			return bot.SendMessageWithMarkup(user, "Выберите пользователя, для изменения", tu.InlineKeyboard(rows...))
 		default:
-			return nil
+			return bot.SendMessage(user, "Что-то пошло не так, возвращаемся в главное меню")
 		}
 	case 2:
-		return nil
+		switch this.args.operation {
+		case ADD:
+			err := bot.SendMessageWithoutMarkup(user, "Отлично, теперь напишите имя пользователя")
+			if err != nil {
+				return err
+			}
+			continueWithInputMode(user, query.Data)
+			return nil
+		case EDIT:
+			editedUser, err := exportedData.GetUser(this.args.id)
+			if err != nil {
+				return err
+			}
+			err = bot.SendMessageWithMarkup(
+				user,
+				"Напишите новое имя пользователя или нажмите на кнопку",
+				tu.InlineKeyboard([]telego.InlineKeyboardButton{
+					tu.InlineKeyboardButton("Оставить без изменений").WithCallbackData(query.Data + "_" + editedUser.Username),
+				}),
+			)
+			if err != nil {
+				return err
+			}
+			continueWithInputMode(user, query.Data)
+			return nil
+		default:
+			return bot.SendMessage(user, "Что-то пошло не так, возвращаемся в главное меню")
+		}
 	case 3:
-		return nil
+		rows := [][]telego.InlineKeyboardButton{
+			{
+				tu.InlineKeyboardButton("Админ").WithCallbackData(query.Data + "_" + string(data.ADMIN)),
+				tu.InlineKeyboardButton("Резерватор").WithCallbackData(query.Data + "_" + string(data.RESERVATOR)),
+			},
+			{
+				tu.InlineKeyboardButton("Посетитель").WithCallbackData(query.Data + "_" + string(data.VISITOR)),
+				tu.InlineKeyboardButton("Наблюдатель").WithCallbackData(query.Data + "_" + string(data.SPECTATOR)),
+			},
+		}
+		if this.args.operation == EDIT {
+			editedUser, err := exportedData.GetUser(this.args.id)
+			if err != nil {
+				return err
+			}
+			rows = append(rows, []telego.InlineKeyboardButton{tu.InlineKeyboardButton("Оставляем как есть").WithCallbackData(query.Data + "_" + editedUser.Username)})
+		}
+		return bot.SendMessageWithMarkup(
+			user,
+			"Теперь выбираем права нашего героя",
+			tu.InlineKeyboard(rows...),
+		)
 	case 4:
-		return nil
+		switch this.args.operation {
+		case ADD:
+			user := exportedData.CreateNewUser(this.args.id, this.args.username, this.args.rights)
+			if user == nil {
+				return bot.SendMessage(user, "Мы не смогли добавить пользователя, разбираемся...")
+			}
+		case EDIT:
+			return nil
+		}
+		return bot.SendMessage(user, "Всё готово, шеф, принимаем работу.")
 	default:
 		return nil
 	}
+}
+
+func continueWithInputMode(user *data.User, cbd string) {
+	user.History.InputMode = true
+	user.History.LastCallbackData = &cbd
 }

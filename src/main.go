@@ -20,7 +20,7 @@ func main() {
 	logger.Info("Db initialized")
 	logger.Info("Bot initialized")
 	data := data.CreateData(dbWrapper)
-	bot := tg.CreateBot(os.Getenv("TOKEN"), data)
+	bot := tg.CreateBot(os.Getenv("TOKEN"))
 	logger.Info("Data created")
 	tasks := tasks.InitTasks(data, bot)
 	logger.Info("Tasks initialized")

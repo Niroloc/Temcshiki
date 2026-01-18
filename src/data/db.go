@@ -380,3 +380,27 @@ func (this *Db) UpdateEvent(eventId int, event Event) {
 		this.logger.Error("An event is not updated")
 	}
 }
+
+func (this *Db) CreateNewUser(tgId int, username string, rights UserRights) *User {
+	rows, err := this.connection.Query(
+		fmt.Sprintf(
+			"INSERT INTO users (tgid, username, rights) VALUES (%d, '%s', '%s') RETURNING id",
+			tgId,
+			username,
+			rights,
+		),
+	)
+	if err != nil || !rows.Next() {
+		this.logger.Error("An error occurred while adding creating new user on db")
+		this.logger.Error(err.Error())
+		return nil
+	}
+	id := 0
+	err = rows.Scan(&id)
+	if err != nil {
+		this.logger.Error("An error occurred extracting id of the new user")
+		this.logger.Error(err.Error())
+		return nil
+	}
+	return CreateUser(id, tgId, username, rights)
+}

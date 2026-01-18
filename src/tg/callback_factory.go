@@ -8,5 +8,5 @@ import (
 type CallbackFactory interface {
 	GetAlias() string
 	ParseArguments(*telego.CallbackQuery) error
-	Apply(*telego.CallbackQuery, *data.User, *Bot) error
+	Apply(*telego.CallbackQuery, *data.User, *data.Data, *Bot) error
 }
