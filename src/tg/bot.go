@@ -137,8 +137,6 @@ func (this *Bot) SendMessageWithMarkup(user *data.User, msg string, markup *tele
 	return err
 }
 
-func (this *Bot) InputCallbackMode(msg *telego.Message, user *data.User)
-
 func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 	updates, err := this.bot.UpdatesViaLongPolling(context.Background(), nil)
 	if err != nil {
@@ -155,11 +153,13 @@ func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 			if user.History.InputMode {
 				markup := tu.InlineKeyboard(
 					[]telego.InlineKeyboardButton{
-						tu.InlineKeyboardButton("Добавить пользователя").WithCallbackData("user_add"),
-						tu.InlineKeyboardButton("Редактировать роли").WithCallbackData("user_edit"),
+						tu.InlineKeyboardButton("Отмена").WithCallbackData(*user.History.LastCallbackData),
+						tu.InlineKeyboardButton("Продолжить").WithCallbackData(
+							*user.History.LastCallbackData + "_" + update.Message.Text,
+						),
 					},
 				)
-				err := this.SendMessageWithMarkup()
+				err := this.SendMessageWithMarkup(user, "Подтвердите корректность ввода", markup)
 				if err != nil {
 					this.logger.Error(err.Error())
 				}
