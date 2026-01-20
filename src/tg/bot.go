@@ -32,7 +32,7 @@ func getAdminKeyboard() *telego.InlineKeyboardMarkup {
 	return tu.InlineKeyboard(
 		[]telego.InlineKeyboardButton{
 			tu.InlineKeyboardButton("Добавить пользователя").WithCallbackData("user_add"),
-			tu.InlineKeyboardButton("Редактировать роли").WithCallbackData("user_edit"),
+			tu.InlineKeyboardButton("Редактировать пользователя").WithCallbackData("user_edit"),
 		},
 		[]telego.InlineKeyboardButton{
 			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData("rating"),
