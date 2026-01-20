@@ -283,7 +283,12 @@ func (this *Db) GetUrls() []Url {
 }
 
 func (this *Db) UpdateStage(prevStage, curStage Stage) {
-	_, err := this.connection.Exec(
+	tx, err := this.connection.Begin()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return
+	}
+	_, err = tx.Exec(
 		fmt.Sprintf("UPDATE stage SET dt = %d WHERE dt = %d",
 			curStage,
 			prevStage,
@@ -292,11 +297,21 @@ func (this *Db) UpdateStage(prevStage, curStage Stage) {
 	if err != nil {
 		this.logger.Warn("Error while updating stage in db, rollback to default")
 		this.GetStage()
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		this.logger.Error(err.Error())
 	}
 }
 
 func (this *Db) UpdateNextTaskDate(updatedDate time.Time) {
-	_, err := this.connection.Exec(
+	tx, err := this.connection.Begin()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return
+	}
+	_, err = tx.Exec(
 		fmt.Sprintf(
 			"UPDATE next_task SET dt = '%s' WHERE id = 0",
 			updatedDate.Format(time.DateOnly),
@@ -304,6 +319,11 @@ func (this *Db) UpdateNextTaskDate(updatedDate time.Time) {
 	)
 	if err != nil {
 		this.logger.Error("Next task date was not updated")
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		this.logger.Error(err.Error())
 	}
 }
 
@@ -339,7 +359,11 @@ func (this *Db) GetQueuedRests() []Rest {
 }
 
 func (this *Db) CreateNewEvent() (Event, error) {
-	rows, err := this.connection.Query("INSERT INTO events (visit_date, rest_id, is_visited) VALUES (NULL, NULL, 0) RETURNS id")
+	tx, err := this.connection.Begin()
+	if err != nil {
+		return Event{}, err
+	}
+	rows, err := tx.Query("INSERT INTO events (visit_date, rest_id, is_visited) VALUES (NULL, NULL, 0) RETURNING id")
 	if err != nil {
 		this.logger.Error("Error while adding new event into db")
 		this.logger.Error(err.Error())
@@ -350,6 +374,10 @@ func (this *Db) CreateNewEvent() (Event, error) {
 		rows.Scan(&id)
 	} else {
 		return Event{}, errors.New("No return value")
+	}
+	err = tx.Commit()
+	if err != nil {
+		return Event{}, err
 	}
 	return Event{id, nil, -1, false}, nil
 }
@@ -367,7 +395,12 @@ func (this *Db) UpdateEvent(eventId int, event Event) {
 	if event.IsVisited {
 		isVisited = "1"
 	}
-	_, err := this.connection.Exec(
+	tx, err := this.connection.Begin()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return
+	}
+	_, err = tx.Exec(
 		fmt.Sprintf(
 			"UPDATE events SET visit_date = %s, rest_id = %s, is_visited = %s WHERE id = %d",
 			visitDate,
@@ -379,11 +412,21 @@ func (this *Db) UpdateEvent(eventId int, event Event) {
 	if err != nil {
 		this.logger.Error("An event is not updated")
 		this.logger.Error(err.Error())
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		this.logger.Error(err.Error())
 	}
 }
 
 func (this *Db) CreateNewUser(tgId int, username string, rights UserRights) *User {
-	rows, err := this.connection.Query(
+	tx, err := this.connection.Begin()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return nil
+	}
+	rows, err := tx.Query(
 		fmt.Sprintf(
 			"INSERT INTO users (tgid, username, rights) VALUES (%d, '%s', '%s') RETURNING id",
 			tgId,
@@ -403,11 +446,21 @@ func (this *Db) CreateNewUser(tgId int, username string, rights UserRights) *Use
 		this.logger.Error(err.Error())
 		return nil
 	}
+	err = tx.Commit()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return nil
+	}
 	return CreateUser(id, tgId, username, rights)
 }
 
 func (this *Db) UpdateUser(userId int, user *User) {
-	_, err := this.connection.Exec(
+	tx, err := this.connection.Begin()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return
+	}
+	_, err = tx.Exec(
 		fmt.Sprintf(
 			"UPDATE users SET username = '%s', rights = '%s' WHERE id = %d",
 			user.Username,
@@ -417,6 +470,10 @@ func (this *Db) UpdateUser(userId int, user *User) {
 	)
 	if err != nil {
 		this.logger.Error("User is not updated")
+		this.logger.Error(err.Error())
+	}
+	err = tx.Commit()
+	if err != nil {
 		this.logger.Error(err.Error())
 	}
 }

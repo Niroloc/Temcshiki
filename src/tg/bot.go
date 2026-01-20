@@ -119,7 +119,7 @@ func (this *Bot) SendMessageWithVoting(user *data.User, prefix string, eventId i
 	}
 	buttonRows := [][]telego.InlineKeyboardButton{}
 	for i := 0; i < len(buts); i += 3 {
-		buttonRows = append(buttonRows, buts[i:i+3])
+		buttonRows = append(buttonRows, buts[i:min(len(buts), i+3)])
 	}
 	inlineKeyboard := tu.InlineKeyboard(buttonRows...)
 	_, err := this.bot.SendMessage(
@@ -184,7 +184,7 @@ func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 func (this *Bot) welcome(msg *telego.Message, exportedData *data.Data) (*data.User, error) {
 	tgId := msg.Chat.ID
 	this.logger.Info(fmt.Sprintf("User with id %d has written to the bot", tgId))
-	user, err := exportedData.GetUser(int(tgId))
+	user, err := exportedData.GetUserByTg(int(tgId))
 	if err != nil {
 		this.logger.Warn(fmt.Sprintf("An unknown user has written to the bot. ID: %d", tgId))
 		return nil, errors.New("Unknown user")

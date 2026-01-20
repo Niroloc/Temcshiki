@@ -128,7 +128,7 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exp
 			)
 			rows := [][]telego.InlineKeyboardButton{}
 			for i := 0; i < len(buts); i += 3 {
-				rows = append(rows, buts[i:i+3])
+				rows = append(rows, buts[i:min(i+3, len(buts))])
 			}
 			return bot.SendMessageWithMarkup(user, "Выберите пользователя, для изменения", tu.InlineKeyboard(rows...))
 		default:
@@ -144,7 +144,7 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exp
 			continueWithInputMode(user, query.Data)
 			return nil
 		case EDIT:
-			editedUser, err := exportedData.GetUser(this.args.id)
+			editedUser, err := exportedData.GetUserById(this.args.id)
 			if err != nil {
 				return err
 			}
@@ -175,7 +175,7 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exp
 			},
 		}
 		if this.args.operation == EDIT {
-			editedUser, err := exportedData.GetUser(this.args.id)
+			editedUser, err := exportedData.GetUserById(this.args.id)
 			if err != nil {
 				return err
 			}
@@ -194,7 +194,7 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exp
 				return bot.SendMessage(user, "Мы не смогли добавить пользователя, разбираемся...")
 			}
 		case EDIT:
-			editedUser, err := exportedData.GetUser(this.args.id)
+			editedUser, err := exportedData.GetUserById(this.args.id)
 			if err != nil {
 				return bot.SendMessage(user, "Мы не смогли найти пользователя для редактирования, разбираемся...")
 			}

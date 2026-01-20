@@ -9,12 +9,17 @@ import (
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
 	"github.com/Niroloc/Temcshiki/v2/src/tasks"
 	"github.com/Niroloc/Temcshiki/v2/src/tg"
+	"github.com/joho/godotenv"
 )
 
 type root struct{}
 
 func main() {
 	logger := logger.GetLogger(reflect.TypeFor[root]())
+	err := godotenv.Load(".env")
+	if err != nil {
+		logger.Warn(".env is not loaded, be careful!")
+	}
 	dbWrapper := data.GetDb(os.Getenv("DB_FILE"))
 	dbWrapper.InitDb(os.Getenv("FORWARD_MIGRATION"))
 	logger.Info("Db initialized")
@@ -26,7 +31,7 @@ func main() {
 	logger.Info("Tasks initialized")
 	go tasks.Loop()
 	logger.Info("Tasks loop started")
-	err := bot.InfinitePolling(data)
+	err = bot.InfinitePolling(data)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
