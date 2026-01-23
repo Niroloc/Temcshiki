@@ -51,7 +51,7 @@ func (this *Reservating) Apply(bot *tg.Bot, exportData *data.Data) {
 					"Приветствую, дорогой бронировальщик! Нам нужно забронировать ресторан %s (%s) на %d человек %s в 16:00",
 					rest.RestName,
 					rest.MapUrl,
-					visitorsNumber+1,
+					min(visitorsNumber+1, len(exportData.GetUsers())),
 					date.Format(time.DateOnly),
 				),
 			)

@@ -11,12 +11,12 @@ import (
 )
 
 type CallbackFactoryManager struct {
-	aliasToFactory map[string]CallbackFactory
+	aliasToFactory map[data.Alias]CallbackFactory
 	logger         *logger.Logger
 }
 
 func CreateCallbackFactoryManager(cfs []CallbackFactory) *CallbackFactoryManager {
-	aliasToFactory := map[string]CallbackFactory{}
+	aliasToFactory := map[data.Alias]CallbackFactory{}
 	for _, cf := range cfs {
 		aliasToFactory[cf.GetAlias()] = cf
 	}
@@ -30,7 +30,18 @@ func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.Cal
 		this.logger.Error(fmt.Sprintf("Unknown user is sending callback query. ID: %d", callbackQuery.Message.GetChat().ID))
 		return
 	}
-	fact, exists := this.aliasToFactory[strings.Split(callbackQuery.Data, "_")[0]]
+	alias := data.Alias(strings.Split(callbackQuery.Data, "_")[0])
+	if !exportedData.CheckFactoryRights(alias, user) {
+		this.logger.Error(
+			fmt.Sprintf(
+				"User without rights (%s) is sending the callback %s",
+				user.Username,
+				callbackQuery.Data,
+			),
+		)
+		return
+	}
+	fact, exists := this.aliasToFactory[alias]
 	if !exists {
 		this.logger.Error(fmt.Sprintf("Unknown callback factory for data: %s", callbackQuery.Data))
 		return

@@ -29,5 +29,5 @@ func (this Date) GetButtonTitle() string {
 }
 
 func (this Date) GetCallbackData(eventId int) string {
-	return fmt.Sprintf("date_%d_%d", eventId, this.Id)
+	return fmt.Sprintf("%s_%d_%d", DATE, eventId, this.Id)
 }

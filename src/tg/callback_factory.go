@@ -6,7 +6,7 @@ import (
 )
 
 type CallbackFactory interface {
-	GetAlias() string
+	GetAlias() data.Alias
 	ParseArguments(*telego.CallbackQuery) error
 	Apply(*telego.CallbackQuery, *data.User, *data.Data, *Bot) error
 }

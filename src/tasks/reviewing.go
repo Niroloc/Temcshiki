@@ -24,7 +24,7 @@ func (this ReviewOption) GetButtonTitle() string {
 }
 
 func (this ReviewOption) GetCallbackData(eventId int) string {
-	return fmt.Sprintf("review_%d_%d_%s", eventId, this.val, string(this.category))
+	return fmt.Sprintf("%s_%d_%d_%s", data.REVIEW, eventId, this.val, string(this.category))
 }
 
 type Reviewing struct {

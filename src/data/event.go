@@ -35,5 +35,5 @@ func (this Event) GetButtonTitle() string {
 }
 
 func (this Event) GetCallbackData(eventId int) string {
-	return fmt.Sprintf("approve_%d", eventId)
+	return fmt.Sprintf("%s_%d", APPROVE, eventId)
 }

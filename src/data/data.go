@@ -26,10 +26,11 @@ func getPrevWeekDay(today time.Time, weekday time.Weekday) time.Time {
 }
 
 type Data struct {
-	tgIdToUser map[int]*User
-	commonData *CommonData
-	db         *Db
-	logger     *logger.Logger
+	tgIdToUser    map[int]*User
+	factoryRights *FactoryRights
+	commonData    *CommonData
+	db            *Db
+	logger        *logger.Logger
 }
 
 func CreateData(dbWrapper *Db) *Data {
@@ -39,10 +40,15 @@ func CreateData(dbWrapper *Db) *Data {
 		tgIdToUser[user.TgId] = user
 	}
 	return &Data{
-		tgIdToUser: tgIdToUser,
-		commonData: MakeCommonData(dbWrapper, tgIdToUser),
-		db:         dbWrapper,
-		logger:     logger.GetLogger(reflect.TypeFor[Data]())}
+		tgIdToUser:    tgIdToUser,
+		factoryRights: CreateFactoryRights(),
+		commonData:    MakeCommonData(dbWrapper, tgIdToUser),
+		db:            dbWrapper,
+		logger:        logger.GetLogger(reflect.TypeFor[Data]())}
+}
+
+func (this *Data) CheckFactoryRights(alias Alias, user *User) bool {
+	return this.factoryRights.CheckUserRights(alias, user)
 }
 
 func (this *Data) GetStage() Stage {

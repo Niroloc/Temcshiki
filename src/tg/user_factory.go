@@ -22,7 +22,7 @@ const (
 )
 
 type UserFactory struct {
-	alias  string
+	alias  data.Alias
 	logger *logger.Logger
 	args   UserFactoryArgs
 }
@@ -46,13 +46,13 @@ func CreateUserFactoryArgs() UserFactoryArgs {
 
 func CreateUserFactory() *UserFactory {
 	return &UserFactory{
-		alias:  "user",
+		alias:  data.USER,
 		logger: logger.GetLogger(reflect.TypeFor[UserFactory]()),
 		args:   CreateUserFactoryArgs(),
 	}
 }
 
-func (this *UserFactory) GetAlias() string {
+func (this *UserFactory) GetAlias() data.Alias {
 	return this.alias
 }
 
@@ -64,7 +64,7 @@ func (this *UserFactory) ParseArguments(query *telego.CallbackQuery) error {
 		if err != nil {
 			this.logger.Error(err.Error())
 			this.args = CreateUserFactoryArgs()
-			break
+			return err
 		}
 	}
 	return nil

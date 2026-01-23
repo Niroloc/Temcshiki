@@ -76,6 +76,7 @@ func CreateBot(botToken string) *Bot {
 		callbackManager: CreateCallbackFactoryManager(
 			[]CallbackFactory{
 				CreateUserFactory(),
+				CreateRatingFactory(),
 			},
 		),
 		logger: logger,

@@ -1,6 +1,8 @@
 package data
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Rest struct {
 	Id           int
@@ -25,5 +27,5 @@ func (this Rest) GetButtonTitle() string {
 }
 
 func (this Rest) GetCallbackData(eventId int) string {
-	return fmt.Sprintf("rest_%d_%d", eventId, this.Id)
+	return fmt.Sprintf("%s_%d_%d", REST, eventId, this.Id)
 }
