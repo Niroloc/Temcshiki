@@ -2,7 +2,9 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
+	"slices"
 	"time"
 
 	"github.com/Niroloc/Temcshiki/v2/src/logger"
@@ -109,7 +111,7 @@ func (this *Data) GetRestsForVoting() []Rest {
 			visitedRestIds[e.RestId] = struct{}{}
 		}
 	}
-	return utils.FilterValues(
+	return utils.FilterValuesToList(
 		this.commonData.rests,
 		func(r Rest) bool {
 			_, exists := visitedRestIds[r.Id]
@@ -119,7 +121,7 @@ func (this *Data) GetRestsForVoting() []Rest {
 }
 
 func (this *Data) GetNewEvent() (Event, error) {
-	evs := utils.FilterValues(
+	evs := utils.FilterValuesToList(
 		this.commonData.events,
 		func(e Event) bool {
 			return !e.IsVisited
@@ -148,7 +150,7 @@ func (this *Data) GetDatesForVoting() []Date {
 		this.logger.Error("No dates for the new event!")
 		return []Date{}
 	}
-	return utils.FilterValues(
+	return utils.FilterValuesToList(
 		this.commonData.dates,
 		func(d Date) bool {
 			return ev.Id == d.EventId
@@ -162,7 +164,7 @@ func (this *Data) GetNextTaskDate() string {
 
 func (this *Data) GetWinnerDate(event Event) Date {
 	votesByDateId := map[int]int{}
-	for _, v := range utils.FilterValues(
+	for _, v := range utils.FilterValuesToList(
 		this.commonData.votes,
 		func(v Vote) bool {
 			return v.EventId == event.Id && v.DateId > -1
@@ -188,7 +190,7 @@ func (this *Data) GetWinnerDate(event Event) Date {
 
 func (this *Data) GetWinnerRest(event Event) Rest {
 	votesByRestId := map[int]int{}
-	for _, v := range utils.FilterValues(
+	for _, v := range utils.FilterValuesToList(
 		this.commonData.votes,
 		func(v Vote) bool {
 			return v.EventId == event.Id && v.RestId > -1
@@ -214,8 +216,8 @@ func (this *Data) GetRestById(id int) Rest {
 }
 
 func (this *Data) GetAcceptedVisitors(event Event) []User {
-	return utils.ListMap(
-		utils.FilterValues(
+	return utils.Map(
+		utils.FilterValuesToList(
 			this.commonData.votes,
 			func(v Vote) bool {
 				return v.RestId == -1 && v.DateId == -1 && v.EventId == event.Id
@@ -242,4 +244,71 @@ func (this *Data) UpdateUser(user *User, newUsername string, newRights UserRight
 	cur.Rights = newRights
 	cur.Username = newUsername
 	this.db.UpdateUser(user.Id, cur)
+}
+
+func (this *Data) GetRating() (Table, error) {
+	table := CreateNewTable([]string{"Название", "Дата посещения", "Интерьер", "Обслуживание", "Еда", "Цены", "Рейтинг"})
+	reviews := utils.ValuesToList(this.commonData.reviews)
+	restToReviews := utils.GroupByMapReduce(
+		reviews,
+		func(r Review) Rest { return this.commonData.rests[r.RestorauntId] },
+		func(r Review) []Review { return []Review{r} },
+		func(a []Review, b []Review) []Review { return append(a, b...) },
+	)
+	type Stat struct {
+		sum    int
+		number int
+	}
+	restToCategoryStats := map[Rest]map[ReviewCategory]Stat{}
+	for rest, reviews := range restToReviews {
+		restToCategoryStats[rest] = utils.GroupByMapReduce(
+			reviews,
+			func(r Review) ReviewCategory { return r.Category },
+			func(r Review) Stat { return Stat{r.Rate, 1} },
+			func(a, b Stat) Stat { return Stat{a.sum + b.sum, a.number + b.number} },
+		)
+	}
+	restToOverall := map[Rest]Stat{}
+	for rest, stats := range restToCategoryStats {
+		restToOverall[rest] = *utils.Reduce(
+			utils.ValuesToList(stats),
+			func(a, b Stat) Stat { return Stat{a.sum + b.sum, a.number + b.number} },
+		)
+	}
+	type Line struct {
+		rest          Rest
+		categoryStats map[ReviewCategory]Stat
+		overallStat   Stat
+	}
+	lines := []Line{}
+	for rest := range restToCategoryStats {
+		lines = append(lines, Line{rest, restToCategoryStats[rest], restToOverall[rest]})
+	}
+	slices.SortFunc(lines, func(x, y Line) int {
+		a := float64(x.overallStat.sum) / float64(x.overallStat.number)
+		b := float64(y.overallStat.sum) / float64(y.overallStat.number)
+		if a > b {
+			return -1
+		} else if a == b {
+			return 0
+		} else {
+			return 1
+		}
+	})
+	for _, l := range lines {
+		eventO := utils.FilterValuesToList(this.commonData.events, func(e Event) bool { return e.RestId == l.rest.Id })
+		if len(eventO) != 1 {
+			return table, fmt.Errorf("Some issue during searching the event")
+		}
+		table.AddLine([]string{
+			l.rest.RestName,
+			eventO[0].VisitDate.Format(time.DateOnly),
+			fmt.Sprintf("%v", float64(l.categoryStats[INTERIOR].sum)/float64(l.categoryStats[INTERIOR].number)),
+			fmt.Sprintf("%v", float64(l.categoryStats[SERVICE].sum)/float64(l.categoryStats[SERVICE].number)),
+			fmt.Sprintf("%v", float64(l.categoryStats[FOOD].sum)/float64(l.categoryStats[FOOD].number)),
+			fmt.Sprintf("%v", float64(l.categoryStats[PRICES].sum)/float64(l.categoryStats[PRICES].number)),
+			fmt.Sprintf("%v", float64(l.overallStat.sum)/float64(l.overallStat.sum)),
+		})
+	}
+	return table, nil
 }

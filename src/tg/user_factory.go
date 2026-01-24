@@ -120,7 +120,7 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exp
 			continueWithInputMode(user, query.Data)
 			return nil
 		case EDIT:
-			buts := utils.MapValues(
+			buts := utils.MapValuesToList(
 				exportedData.GetUsers(),
 				func(u *data.User) telego.InlineKeyboardButton {
 					return tu.InlineKeyboardButton(u.Username).WithCallbackData(query.Data + fmt.Sprintf("_%d", u.Id))

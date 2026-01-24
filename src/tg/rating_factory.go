@@ -29,6 +29,6 @@ func (this *RatingFactory) ParseArguments(query *telego.CallbackQuery) error {
 }
 
 func (this *RatingFactory) Apply(query *telego.CallbackQuery, user *data.User, exportedData *data.Data, bot *Bot) error {
-	bot.SendMessage(user, "Функция подсчёта рейтинга пока не реализована")
+	exportedData.GetRating()
 	return nil
 }

@@ -1,23 +1,11 @@
 package utils
 
-type List[V any] []V
-type Map[K comparable, V any] map[K]V
-
 type filter[V any] func(V) bool
 type mapper[X, Y any] func(X) Y
+type reducer[X any] func(X, X) X
 
-func (this *List[V]) Filter(f filter[V]) List[V] {
-	res := List[V]{}
-	for _, e := range *this {
-		if f(e) {
-			res = append(res, e)
-		}
-	}
-	return res
-}
-
-func FilterValuesToMap[V any](mp map[int]V, f filter[V]) map[int]V {
-	res := map[int]V{}
+func FilterValuesToMap[K comparable, V any](mp map[K]V, f filter[V]) map[K]V {
+	res := map[K]V{}
 	for k, v := range mp {
 		if f(v) {
 			res[k] = v
@@ -26,7 +14,7 @@ func FilterValuesToMap[V any](mp map[int]V, f filter[V]) map[int]V {
 	return res
 }
 
-func FilterValues[V any](mp map[int]V, f filter[V]) []V {
+func FilterValuesToList[K comparable, V any](mp map[K]V, f filter[V]) []V {
 	res := []V{}
 	for _, v := range mp {
 		if f(v) {
@@ -36,7 +24,7 @@ func FilterValues[V any](mp map[int]V, f filter[V]) []V {
 	return res
 }
 
-func MapValues[K comparable, V, W any](mp map[K]V, f mapper[V, W]) []W {
+func MapValuesToList[K comparable, V, W any](mp map[K]V, f mapper[V, W]) []W {
 	res := []W{}
 	for _, v := range mp {
 		res = append(res, f(v))
@@ -44,7 +32,17 @@ func MapValues[K comparable, V, W any](mp map[K]V, f mapper[V, W]) []W {
 	return res
 }
 
-func FilterList[V any](l []V, f filter[V]) []V {
+func ValuesToList[K comparable, V any](mp map[K]V) []V {
+	res := make([]V, len(mp))
+	ptr := 0
+	for _, v := range mp {
+		res[ptr] = v
+		ptr++
+	}
+	return res
+}
+
+func Filter[V any](l []V, f filter[V]) []V {
 	res := []V{}
 	for _, v := range l {
 		if f(v) {
@@ -54,7 +52,7 @@ func FilterList[V any](l []V, f filter[V]) []V {
 	return res
 }
 
-func ListMap[X, Y any](l []X, f mapper[X, Y]) []Y {
+func Map[X, Y any](l []X, f mapper[X, Y]) []Y {
 	res := make([]Y, len(l))
 	for i, v := range l {
 		res[i] = f(v)
@@ -62,10 +60,42 @@ func ListMap[X, Y any](l []X, f mapper[X, Y]) []Y {
 	return res
 }
 
-func ListToMap[V any, K comparable](l []V, getKey mapper[V, K]) map[K]V {
+func ToMapMappingToKey[V any, K comparable](l []V, getKey mapper[V, K]) map[K]V {
 	res := map[K]V{}
 	for _, v := range l {
 		res[getKey(v)] = v
+	}
+	return res
+}
+
+func Reduce[V any](l []V, f reducer[V]) *V {
+	if len(l) == 0 {
+		return nil
+	}
+	res := l[0]
+	for i := 1; i < len(l); i++ {
+		res = f(res, l[i])
+	}
+	return &res
+}
+
+func MapCount[V any, K comparable](l []V, f mapper[V, K]) map[K]int {
+	res := map[K]int{}
+	for _, v := range l {
+		res[f(v)]++
+	}
+	return res
+}
+
+func GroupByMapReduce[K comparable, V, W any](l []W, toKey mapper[W, K], mp mapper[W, V], rd reducer[V]) map[K]V {
+	res := map[K]V{}
+	for _, w := range l {
+		k := toKey(w)
+		if v, exists := res[k]; exists {
+			res[k] = rd(v, mp(w))
+		} else {
+			res[k] = mp(w)
+		}
 	}
 	return res
 }

@@ -29,8 +29,8 @@ func MakeCommonData(dbWrapper *Db, tgIdToUser map[int]*User) *CommonData {
 	for _, user := range tgIdToUser {
 		result.users[user.Id] = user
 	}
-	result.events = utils.ListToMap(
-		utils.ListMap(dbWrapper.GetEvents(), EventFromExported),
+	result.events = utils.ToMapMappingToKey(
+		utils.Map(dbWrapper.GetEvents(), EventFromExported),
 		func(e Event) int { return e.Id },
 	)
 	for _, rest := range dbWrapper.GetRests() {
