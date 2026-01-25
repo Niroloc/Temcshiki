@@ -29,6 +29,11 @@ func (this *RatingFactory) ParseArguments(query *telego.CallbackQuery) error {
 }
 
 func (this *RatingFactory) Apply(query *telego.CallbackQuery, user *data.User, exportedData *data.Data, bot *Bot) error {
-	exportedData.GetRating()
-	return nil
+	t, err := exportedData.GetRating()
+	if err != nil {
+		this.logger.Error("Error while creating rating table")
+		return err
+	}
+	msg := "```\n" + t.Render() + "\n```"
+	return bot.SendMessageWithMd(user, msg)
 }

@@ -247,7 +247,7 @@ func (this *Data) UpdateUser(user *User, newUsername string, newRights UserRight
 }
 
 func (this *Data) GetRating() (Table, error) {
-	table := CreateNewTable([]string{"Название", "Дата посещения", "Интерьер", "Обслуживание", "Еда", "Цены", "Рейтинг"})
+	table := CreateNewTable([]string{"#", "Название", "Дата посещения", "Интерьер", "Обслуживание", "Еда", "Цены", "Рейтинг"})
 	reviews := utils.ValuesToList(this.commonData.reviews)
 	restToReviews := utils.GroupByMapReduce(
 		reviews,
@@ -295,19 +295,20 @@ func (this *Data) GetRating() (Table, error) {
 			return 1
 		}
 	})
-	for _, l := range lines {
+	for i, l := range lines {
 		eventO := utils.FilterValuesToList(this.commonData.events, func(e Event) bool { return e.RestId == l.rest.Id })
 		if len(eventO) != 1 {
 			return table, fmt.Errorf("Some issue during searching the event")
 		}
 		table.AddLine([]string{
+			fmt.Sprintf("%d", i+1),
 			l.rest.RestName,
 			eventO[0].VisitDate.Format(time.DateOnly),
-			fmt.Sprintf("%v", float64(l.categoryStats[INTERIOR].sum)/float64(l.categoryStats[INTERIOR].number)),
-			fmt.Sprintf("%v", float64(l.categoryStats[SERVICE].sum)/float64(l.categoryStats[SERVICE].number)),
-			fmt.Sprintf("%v", float64(l.categoryStats[FOOD].sum)/float64(l.categoryStats[FOOD].number)),
-			fmt.Sprintf("%v", float64(l.categoryStats[PRICES].sum)/float64(l.categoryStats[PRICES].number)),
-			fmt.Sprintf("%v", float64(l.overallStat.sum)/float64(l.overallStat.sum)),
+			fmt.Sprintf("%.2f", float64(l.categoryStats[INTERIOR].sum)/float64(l.categoryStats[INTERIOR].number)),
+			fmt.Sprintf("%.2f", float64(l.categoryStats[SERVICE].sum)/float64(l.categoryStats[SERVICE].number)),
+			fmt.Sprintf("%.2f", float64(l.categoryStats[FOOD].sum)/float64(l.categoryStats[FOOD].number)),
+			fmt.Sprintf("%.2fv", float64(l.categoryStats[PRICES].sum)/float64(l.categoryStats[PRICES].number)),
+			fmt.Sprintf("%.2f", float64(l.overallStat.sum)/float64(l.overallStat.sum)),
 		})
 	}
 	return table, nil

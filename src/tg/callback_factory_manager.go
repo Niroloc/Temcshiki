@@ -1,6 +1,7 @@
 package tg
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -70,5 +71,13 @@ func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.Cal
 				err.Error(),
 			),
 		)
+		return
+	}
+	params := &telego.AnswerCallbackQueryParams{}
+	params.WithCallbackQueryID(callbackQuery.ID)
+	err = bot.bot.AnswerCallbackQuery(context.Background(), params)
+	if err != nil {
+		this.logger.Error("Error while answering callback")
+		this.logger.Error(err.Error())
 	}
 }

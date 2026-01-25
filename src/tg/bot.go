@@ -91,6 +91,20 @@ func (this *Bot) SendMessageWithoutMarkup(user *data.User, msg string) error {
 	return err
 }
 
+func (this *Bot) SendMessageWithMd(user *data.User, msg string) error {
+	ctx := context.Background()
+	this.logger.Info(fmt.Sprintf("Sending default message to %s", user.Username))
+	chatId := tu.ID(int64(user.TgId))
+	replyMarkup := getDefaultKeyboard(user)
+	var err error
+	if replyMarkup != nil {
+		_, err = this.bot.SendMessage(ctx, tu.Message(chatId, msg).WithReplyMarkup(replyMarkup).WithParseMode("MarkdownV2"))
+	} else {
+		_, err = this.bot.SendMessage(ctx, tu.Message(chatId, msg).WithParseMode("MarkdownV2"))
+	}
+	return err
+}
+
 func (this *Bot) SendMessage(user *data.User, msg string) error {
 	ctx := context.Background()
 	this.logger.Info(fmt.Sprintf("Sending default message to %s", user.Username))
