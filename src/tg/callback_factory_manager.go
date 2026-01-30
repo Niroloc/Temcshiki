@@ -25,13 +25,17 @@ func CreateCallbackFactoryManager(cfs []CallbackFactory) *CallbackFactoryManager
 	return &CallbackFactoryManager{aliasToFactory: aliasToFactory, logger: logger}
 }
 
+func GetAlias(callbackData string) data.Alias {
+	return data.Alias(strings.Split(callbackData, "_")[0])
+}
+
 func (this *CallbackFactoryManager) GetAndApplyFactory(callbackQuery *telego.CallbackQuery, exportedData *data.Data, bot *Bot) {
 	user, err := exportedData.GetUserByTg(int(callbackQuery.Message.GetChat().ID))
 	if err != nil {
 		this.logger.Error(fmt.Sprintf("Unknown user is sending callback query. ID: %d", callbackQuery.Message.GetChat().ID))
 		return
 	}
-	alias := data.Alias(strings.Split(callbackQuery.Data, "_")[0])
+	alias := GetAlias(callbackQuery.Data)
 	if !exportedData.CheckFactoryRights(alias, user) {
 		this.logger.Error(
 			fmt.Sprintf(

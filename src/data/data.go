@@ -144,6 +144,15 @@ func (this *Data) CreateNewEvent() {
 	this.commonData.CreateNewEvent(e)
 }
 
+func (this *Data) CreateNewUrl(url string) *Url {
+	newUrl, err := this.db.CreateNewUrl(url)
+	if err != nil {
+		return nil
+	}
+	this.commonData.urls[newUrl.Id] = *newUrl
+	return newUrl
+}
+
 func (this *Data) GetDatesForVoting() []Date {
 	ev, err := this.GetNewEvent()
 	if err != nil {

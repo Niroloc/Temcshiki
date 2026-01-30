@@ -3,12 +3,13 @@ package data
 type Alias string
 
 const (
-	USER    Alias = "user"
-	REST    Alias = "rest"
-	DATE    Alias = "date"
-	APPROVE Alias = "approve"
-	REVIEW  Alias = "review"
-	RATING  Alias = "rating"
+	USER     Alias = "user"
+	REST     Alias = "rest"
+	DATE     Alias = "date"
+	APPROVE  Alias = "approve"
+	REVIEW   Alias = "review"
+	RATING   Alias = "rating"
+	NEW_REST Alias = "newrest"
 )
 
 type FactoryRights struct {

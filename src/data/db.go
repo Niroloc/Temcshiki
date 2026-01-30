@@ -454,6 +454,38 @@ func (this *Db) CreateNewUser(tgId int, username string, rights UserRights) *Use
 	return CreateUser(id, tgId, username, rights)
 }
 
+func (this *Db) CreateNewUrl(url string) (*Url, error) {
+	tx, err := this.connection.Begin()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return nil, err
+	}
+	rows, err := tx.Query(
+		fmt.Sprintf(
+			"INSERT INTO urls (link) VALUES ('%s') RETURNING id",
+			url,
+		),
+	)
+	if err != nil || !rows.Next() {
+		this.logger.Error("An error occurred while adding creating new user on db")
+		this.logger.Error(err.Error())
+		return nil, err
+	}
+	id := 0
+	err = rows.Scan(&id)
+	if err != nil {
+		this.logger.Error("An error occurred extracting id of the new user")
+		this.logger.Error(err.Error())
+		return nil, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		this.logger.Error(err.Error())
+		return nil, err
+	}
+	return &Url{id, url}, nil
+}
+
 func (this *Db) UpdateUser(userId int, user *User) {
 	tx, err := this.connection.Begin()
 	if err != nil {

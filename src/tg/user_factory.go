@@ -105,8 +105,8 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exp
 		this.logger.Info("Stage 0 for user factory")
 		markup := tu.InlineKeyboard(
 			[]telego.InlineKeyboardButton{
-				tu.InlineKeyboardButton("Добавить пользователя").WithCallbackData("user_add"),
-				tu.InlineKeyboardButton("Редактировать роли").WithCallbackData("user_edit"),
+				tu.InlineKeyboardButton("Добавить пользователя").WithCallbackData(string(data.USER) + "_" + string(ADD)),
+				tu.InlineKeyboardButton("Редактировать пользователя").WithCallbackData(string(data.USER) + "_" + string(EDIT)),
 			},
 		)
 		return bot.SendMessageWithMarkup(user, "Хм, что-то странное, но давай ещё раз попробуем", markup)

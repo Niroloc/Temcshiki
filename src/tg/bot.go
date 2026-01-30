@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/Niroloc/Temcshiki/v2/src/data"
@@ -12,6 +13,11 @@ import (
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 )
+
+func continueWithInputMode(user *data.User, cbd string) {
+	user.History.InputMode = true
+	user.History.LastCallbackData = &cbd
+}
 
 func getDefaultKeyboard(user *data.User) *telego.InlineKeyboardMarkup {
 	switch user.Rights {
@@ -31,12 +37,12 @@ func getDefaultKeyboard(user *data.User) *telego.InlineKeyboardMarkup {
 func getAdminKeyboard() *telego.InlineKeyboardMarkup {
 	return tu.InlineKeyboard(
 		[]telego.InlineKeyboardButton{
-			tu.InlineKeyboardButton("Добавить пользователя").WithCallbackData("user_add"),
-			tu.InlineKeyboardButton("Редактировать пользователя").WithCallbackData("user_edit"),
+			tu.InlineKeyboardButton("Добавить пользователя").WithCallbackData(string(data.USER) + "_" + string(ADD)),
+			tu.InlineKeyboardButton("Редактировать пользователя").WithCallbackData(string(data.USER) + "_" + string(EDIT)),
 		},
 		[]telego.InlineKeyboardButton{
-			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData("rating"),
-			tu.InlineKeyboardButton("Предложить ресторан").WithCallbackData("newrest"),
+			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData(string(data.RATING)),
+			tu.InlineKeyboardButton("Предложить ресторан").WithCallbackData(string(data.NEW_REST)),
 		},
 	)
 }
@@ -44,8 +50,8 @@ func getAdminKeyboard() *telego.InlineKeyboardMarkup {
 func getRegularUserKeyboard() *telego.InlineKeyboardMarkup {
 	return tu.InlineKeyboard(
 		[]telego.InlineKeyboardButton{
-			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData("rating"),
-			tu.InlineKeyboardButton("Предложить ресторан").WithCallbackData("newrest"),
+			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData(string(data.RATING)),
+			tu.InlineKeyboardButton("Предложить ресторан").WithCallbackData(string(data.NEW_REST)),
 		},
 	)
 }
@@ -53,7 +59,7 @@ func getRegularUserKeyboard() *telego.InlineKeyboardMarkup {
 func getSpectatorKeyboard() *telego.InlineKeyboardMarkup {
 	return tu.InlineKeyboard(
 		[]telego.InlineKeyboardButton{
-			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData("rating"),
+			tu.InlineKeyboardButton("Получить рейтинг").WithCallbackData(string(data.RATING)),
 		},
 	)
 }
@@ -77,6 +83,7 @@ func CreateBot(botToken string) *Bot {
 			[]CallbackFactory{
 				CreateUserFactory(),
 				CreateRatingFactory(),
+				CreateNewRestFactory(),
 			},
 		),
 		logger: logger,
@@ -166,11 +173,17 @@ func (this *Bot) InfinitePolling(exportedData *data.Data) error {
 				continue
 			}
 			if user.History.InputMode {
+				additionalData := update.Message.Text
+				if GetAlias(*user.History.LastCallbackData) == data.NEW_REST && len(strings.Split(*user.History.LastCallbackData, "_")) == 2 {
+					mapUrl := update.Message.Text
+					url := exportedData.CreateNewUrl(mapUrl)
+					additionalData = strconv.Itoa(url.Id)
+				}
 				markup := tu.InlineKeyboard(
 					[]telego.InlineKeyboardButton{
 						tu.InlineKeyboardButton("Отмена").WithCallbackData(*user.History.LastCallbackData),
 						tu.InlineKeyboardButton("Продолжить").WithCallbackData(
-							*user.History.LastCallbackData + "_" + update.Message.Text,
+							*user.History.LastCallbackData + "_" + additionalData,
 						),
 					},
 				)
