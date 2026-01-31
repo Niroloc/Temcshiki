@@ -1,6 +1,10 @@
 package data
 
-import "github.com/Niroloc/Temcshiki/v2/src/utils"
+import (
+	"fmt"
+
+	"github.com/Niroloc/Temcshiki/v2/src/utils"
+)
 
 type CommonData struct {
 	stage        Stage
@@ -63,4 +67,12 @@ func (this *CommonData) GetNextEvent() Event {
 		id = max(id, i)
 	}
 	return this.events[id]
+}
+
+func (this *CommonData) GetUrl(id int) (Url, error) {
+	url, exists := this.urls[id]
+	if exists {
+		return url, nil
+	}
+	return url, fmt.Errorf("Url with id %d does not exist", id)
 }

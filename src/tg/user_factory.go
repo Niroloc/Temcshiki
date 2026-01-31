@@ -205,8 +205,3 @@ func (this *UserFactory) Apply(query *telego.CallbackQuery, user *data.User, exp
 		return nil
 	}
 }
-
-func continueWithInputMode(user *data.User, cbd string) {
-	user.History.InputMode = true
-	user.History.LastCallbackData = &cbd
-}

@@ -509,3 +509,34 @@ func (this *Db) UpdateUser(userId int, user *User) {
 		this.logger.Error(err.Error())
 	}
 }
+
+func (this *Db) AddRest(restName string, mapUrl string, referenceBy int, closestMetro string) (*Rest, error) {
+	tx, err := this.connection.Begin()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := tx.Query(
+		fmt.Sprintf(
+			"INSERT INTO restoraunts (rest_name, map_url, reference_by, closest_metro) VALUES ('%s', '%s', %d, '%s') RETURNING id",
+			restName,
+			mapUrl,
+			referenceBy,
+			closestMetro,
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if !rows.Next() {
+		return nil, fmt.Errorf("Error while adding rest into db (%s)", restName)
+	}
+	var id int
+	if err = rows.Scan(&id); err != nil {
+		return nil, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+	return &Rest{id, restName, mapUrl, referenceBy, closestMetro}, nil
+}

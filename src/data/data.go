@@ -255,6 +255,15 @@ func (this *Data) UpdateUser(user *User, newUsername string, newRights UserRight
 	this.db.UpdateUser(user.Id, cur)
 }
 
+func (this *Data) AddRest(restName string, mapUrl string, referenceBy int, closestMetro string) error {
+	rest, err := this.db.AddRest(restName, mapUrl, referenceBy, closestMetro)
+	if err != nil {
+		return err
+	}
+	this.commonData.rests[rest.Id] = (*rest)
+	return nil
+}
+
 func (this *Data) GetRating() (Table, error) {
 	table := CreateNewTable([]string{"#", "Название", "Дата посещения", "Интерьер", "Обслуживание", "Еда", "Цены", "Рейтинг"})
 	reviews := utils.ValuesToList(this.commonData.reviews)
