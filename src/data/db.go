@@ -540,3 +540,49 @@ func (this *Db) AddRest(restName string, mapUrl string, referenceBy int, closest
 	}
 	return &Rest{id, restName, mapUrl, referenceBy, closestMetro}, nil
 }
+
+func (this *Db) AddVote(user *User, eventId, restId, dateId int) (*Vote, error) {
+	tx, err := this.connection.Begin()
+	if err != nil {
+		return nil, err
+	}
+	restIdStr := "NULL"
+	if restId != -1 {
+		restIdStr = strconv.Itoa(restId)
+	}
+	dateIdStr := "NULL"
+	if dateId != -1 {
+		dateIdStr = strconv.Itoa(dateId)
+	}
+	rows, err := tx.Query(
+		fmt.Sprintf(
+			"INSERT INTO votes (user_id, event_id, rest_id, date_id) VALUES (%d, %d, %s, %s) RETURNING id",
+			user.Id,
+			eventId,
+			restIdStr,
+			dateIdStr,
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if !rows.Next() {
+		return nil, fmt.Errorf("Error while extracting new id of vote from db")
+	}
+	var id int
+	if err = rows.Scan(&id); err != nil {
+		return nil, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+	vote := &Vote{
+		Id:      id,
+		UserId:  user.Id,
+		EventId: eventId,
+		RestId:  restId,
+		DateId:  dateId,
+	}
+	return vote, nil
+}

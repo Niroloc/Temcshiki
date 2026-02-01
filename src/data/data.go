@@ -331,3 +331,25 @@ func (this *Data) GetRating() (Table, error) {
 	}
 	return table, nil
 }
+
+func (this *Data) AddRestVote(user *User, eventId int, restId int) error {
+	if eventId == -1 || restId == -1 {
+		return fmt.Errorf("Some of the reference ids is -1. EventId: %d, RestId: %d", eventId, restId)
+	}
+	existingVotes := utils.FilterValuesToList(
+		this.commonData.votes,
+		func(v Vote) bool {
+			return v.EventId == eventId && v.RestId == restId
+		},
+	)
+	if len(existingVotes) > 0 {
+		return errors.New("The vote has been already counted")
+	}
+
+	if vote, err := this.db.AddVote(user, eventId, restId, -1); err != nil {
+		return err
+	} else {
+		this.commonData.votes[vote.Id] = *vote
+	}
+	return nil
+}
