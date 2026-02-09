@@ -85,6 +85,8 @@ func CreateBot(botToken string) *Bot {
 				CreateRatingFactory(),
 				CreateNewRestFactory(),
 				CreateRestVoteFactory(),
+				CreateDateVoteFactory(),
+				CreateApproveFactory(),
 			},
 		),
 		logger: logger,

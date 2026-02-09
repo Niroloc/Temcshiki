@@ -339,7 +339,7 @@ func (this *Data) AddRestVote(user *User, eventId int, restId int) error {
 	existingVotes := utils.FilterValuesToList(
 		this.commonData.votes,
 		func(v Vote) bool {
-			return v.EventId == eventId && v.RestId == restId
+			return v.EventId == eventId && v.RestId == restId && v.UserId == user.Id
 		},
 	)
 	if len(existingVotes) > 0 {
@@ -347,6 +347,49 @@ func (this *Data) AddRestVote(user *User, eventId int, restId int) error {
 	}
 
 	if vote, err := this.db.AddVote(user, eventId, restId, -1); err != nil {
+		return err
+	} else {
+		this.commonData.votes[vote.Id] = *vote
+	}
+	return nil
+}
+
+func (this *Data) AddDateVote(user *User, eventId int, dateId int) error {
+	if eventId == -1 || dateId == -1 {
+		return fmt.Errorf("Some of the reference ids is -1. EventId: %d, DateId: %d", eventId, dateId)
+	}
+	existingVotes := utils.FilterValuesToList(
+		this.commonData.votes,
+		func(v Vote) bool {
+			return v.EventId == eventId && v.DateId == dateId && v.UserId == user.Id
+		},
+	)
+	if len(existingVotes) > 0 {
+		return errors.New("The vote has been already counted")
+	}
+
+	if vote, err := this.db.AddVote(user, eventId, -1, dateId); err != nil {
+		return err
+	} else {
+		this.commonData.votes[vote.Id] = *vote
+	}
+	return nil
+}
+
+func (this *Data) AddApproveVote(user *User, eventId int) error {
+	if eventId == -1 {
+		return fmt.Errorf("EventId is -1")
+	}
+	existingVotes := utils.FilterValuesToList(
+		this.commonData.votes,
+		func(v Vote) bool {
+			return v.UserId == user.Id && v.EventId == eventId && v.DateId == -1 && v.RestId == -1
+		},
+	)
+	if len(existingVotes) > 0 {
+		return errors.New("The vote has been already counted")
+	}
+	if vote, err := this.db.AddVote(user, eventId, -1, -1); err != nil {
 		return err
 	} else {
 		this.commonData.votes[vote.Id] = *vote
